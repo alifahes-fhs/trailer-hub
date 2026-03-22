@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie — Trailer Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6C63FF">
+</head>
+<body>
+  <header id="site-header">
+    <a href="index.html" class="logo">TRAILER HUB</a>
+    <nav>
+      <a href="index.html">Discover</a>
+      <button class="nav-list-btn" id="nav-watchlist-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        Watchlist <span class="nav-badge zero" id="watchlist-count">0</span>
+      </button>
+      <button class="nav-list-btn" id="nav-watchlater-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Watch Later <span class="nav-badge zero" id="watchlater-count">0</span>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme"><span class="theme-icon">☀</span></button>
+      <a href="contact.html" class="btn-pill">Contact</a>
+    </nav>
+  </header>
+
+  <div id="movie-detail">
+    <div class="detail-loading"><div class="modal-spinner" style="width:48px;height:48px;border-width:3px"></div></div>
+  </div>
+
+  <section id="similar-section" style="display:none; padding: 0 48px 80px;">
+    <div class="section-header" data-reveal style="margin-bottom:28px">
+      <div>
+        <div class="section-eyebrow">You Might Like</div>
+        <h2 class="section-title">SIMILAR</h2>
+      </div>
+    </div>
+    <div id="similar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px"></div>
+  </section>
+
+  <footer>
+    <a href="index.html" class="logo">TRAILER HUB</a>
+    <span class="footer-copy">© 2024 Trailer Hub. All rights reserved.</span>
+    <div class="footer-links"><a href="contact.html">Contact</a></div>
+  </footer>
+
+  <!-- Inline Trailer Player -->
+  <div id="inline-player-wrap" style="display:none">
+    <div id="inline-player-box">
+      <div id="inline-player-header">
+        <div>
+          <div id="inline-player-title"></div>
+          <div id="inline-player-meta"></div>
+        </div>
+        <button id="inline-player-close">✕</button>
+      </div>
+      <div id="inline-player-video"></div>
+      <div id="inline-player-actions"></div>
+    </div>
+  </div>
+
+  <div class="panel-backdrop" id="list-panel">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-tabs">
+          <button class="panel-tab active" id="tab-watchlist">Watchlist</button>
+          <button class="panel-tab" id="tab-watchlater">Watch Later</button>
+        </div>
+        <button class="modal-close" id="panel-close">✕</button>
+      </div>
+      <div class="panel-body" id="panel-body"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

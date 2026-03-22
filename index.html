@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trailer Hub — Discover Movies &amp; TV</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6C63FF">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header id="site-header">
+    <a href="index.html" class="logo">TRAILER HUB</a>
+    <nav>
+      <a href="index.html" class="active">Discover</a>
+      <a href="#trending">Trending</a>
+      <button class="nav-list-btn" id="nav-watchlist-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        Watchlist <span class="nav-badge zero" id="watchlist-count">0</span>
+      </button>
+      <button class="nav-list-btn" id="nav-watchlater-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Watch Later <span class="nav-badge zero" id="watchlater-count">0</span>
+      </button>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle theme"><span class="theme-icon">☀</span></button>
+      <a href="contact.html" class="btn-pill">Contact</a>
+    </nav>
+  </header>
+
+  <!-- STICKY GENRE + FILTER BAR — always visible below header -->
+  <div id="sticky-filters" style="position:fixed;top:70px;left:0;right:0;z-index:190;background:#0d0d1c;border-bottom:1px solid rgba(255,255,255,0.1);padding:0 48px;">
+    <div id="sticky-filters-inner" style="display:flex;align-items:center;gap:12px;height:56px;">
+      <div id="genre-chips" style="display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;padding:8px 0;">
+        <button class="fchip active" data-genre="">🎬 All</button>
+        <button class="fchip" data-genre="28">💥 Action</button>
+        <button class="fchip" data-genre="35">😂 Comedy</button>
+        <button class="fchip" data-genre="18">🎭 Drama</button>
+        <button class="fchip" data-genre="27">👻 Horror</button>
+        <button class="fchip" data-genre="878">🚀 Sci-Fi</button>
+        <button class="fchip" data-genre="10749">💕 Romance</button>
+        <button class="fchip" data-genre="16">✏️ Animation</button>
+        <button class="fchip" data-genre="53">🔪 Thriller</button>
+        <button class="fchip" data-genre="99">🎥 Documentary</button>
+        <button class="fchip" data-genre="14">🧙 Fantasy</button>
+        <button class="fchip" data-genre="80">🕵️ Crime</button>
+        <button class="fchip" data-genre="10751">👨‍👩‍👧 Family</button>
+      </div>
+      <div id="extra-filters" style="display:flex;align-items:center;gap:8px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.08);padding-left:12px;">
+        <select class="fselect" id="rating-select">
+          <option value="">All Ratings</option>
+          <option value="G">G</option>
+          <option value="PG">PG</option>
+          <option value="PG-13">PG-13</option>
+          <option value="R">R</option>
+          <option value="NR">NR</option>
+        </select>
+        <select class="fselect" id="year-filter">
+          <option value="">Any Year</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
+          <option value="2019">2019</option>
+          <option value="2015">2010s</option>
+          <option value="2000">2000s</option>
+          <option value="1990">90s</option>
+        </select>
+        <select class="fselect" id="sort-filter">
+          <option value="popularity.desc">🔥 Popular</option>
+          <option value="vote_average.desc">⭐ Top Rated</option>
+          <option value="release_date.desc">🆕 Newest</option>
+          <option value="revenue.desc">💰 Box Office</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-lines"></div>
+    <div class="hero-inner">
+      <div class="hero-tag"><span class="hero-dot"></span>Your cinematic universe</div>
+      <h1 class="hero-title">EVERY<br><span class="hero-title-ghost">TRAILER.</span><br>ONE HUB.</h1>
+      <p class="hero-sub">Search millions of movies and TV shows.<br>Watch trailers instantly. Never miss what's next.</p>
+      <div class="search-outer">
+        <div class="search-wrapper-ac">
+          <div class="search-box">
+            <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off" aria-label="Search">
+            <select id="search-type" aria-label="Content type">
+              <option value="movie">Movie</option>
+              <option value="tv">TV Show</option>
+            </select>
+            <button id="search-btn">Search</button>
+          </div>
+          <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="art-card"><div class="art-badge">★ 8.8</div><div class="art-face art-face-1">🎬</div><div class="art-info"><div class="art-info-title">Oppenheimer</div><div class="art-info-sub">Drama · 2023</div></div></div>
+      <div class="art-card"><div class="art-badge">★ 8.5</div><div class="art-face art-face-2">🎭</div><div class="art-info"><div class="art-info-title">Dune: Part Two</div><div class="art-info-sub">Sci-Fi · 2024</div></div></div>
+      <div class="art-card"><div class="art-badge">★ 7.9</div><div class="art-face art-face-3">🚀</div><div class="art-info"><div class="art-info-title">Alien: Romulus</div><div class="art-info-sub">Horror · 2024</div></div></div>
+    </div>
+    <div class="scroll-cue"><div class="scroll-cue-track"><div class="scroll-cue-fill"></div></div><span class="scroll-cue-text">Scroll</span></div>
+  </section>
+
+  <!-- Recently Viewed -->
+  <section class="recently-section" id="recently-section" style="display:none">
+    <div class="section-header" style="padding: 48px 48px 0">
+      <div><div class="section-eyebrow">Your History</div><h2 class="section-title">RECENTLY VIEWED</h2></div>
+      <button class="clear-btn" id="clear-recent">Clear</button>
+    </div>
+    <div class="trending-row" id="recently-row" style="padding: 20px 48px 0"></div>
+  </section>
+
+  <!-- Results -->
+  <section class="results-section" id="results-section">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow" id="results-eyebrow">Search Results</div>
+        <h2 class="section-title" id="results-heading">Results</h2>
+      </div>
+      <button class="clear-btn" id="clear-btn">Clear ✕</button>
+    </div>
+    <div id="results-grid"></div>
+    <div id="scroll-sentinel" style="height:1px;margin-top:20px"></div>
+  </section>
+
+  <!-- Trending -->
+  <section class="trending-section" id="trending">
+    <div class="section-header" data-reveal>
+      <div><div class="section-eyebrow">Updated Daily · Live Stats</div><h2 class="section-title">TRENDING NOW</h2></div>
+      <span id="trending-time" style="font-size:11px;color:var(--faint)"></span>
+    </div>
+    <div class="trending-row" id="trending-row" data-reveal></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section class="cta-section" data-reveal>
+    <div class="cta-bg"></div>
+    <h2 class="cta-title">DISCOVER WHAT'S NEXT</h2>
+    <p class="cta-sub">From blockbusters to hidden gems — every trailer is one search away.</p>
+    <a href="contact.html" class="btn-pill" style="font-size:14px;padding:12px 28px">Share Your Ideas →</a>
+  </section>
+
+  <footer>
+    <a href="index.html" class="logo">TRAILER HUB</a>
+    <span class="footer-copy">© 2024 Trailer Hub. All rights reserved.</span>
+    <div class="footer-links"><a href="contact.html">Contact</a><a href="#">Privacy</a></div>
+  </footer>
+
+  <!-- Inline Trailer Player -->
+  <div id="inline-player-wrap" style="display:none">
+    <div id="inline-player-box">
+      <div id="inline-player-header">
+        <div>
+          <div id="inline-player-title"></div>
+          <div id="inline-player-meta"></div>
+        </div>
+        <button id="inline-player-close">✕</button>
+      </div>
+      <div id="inline-player-video"></div>
+      <div id="inline-player-actions"></div>
+    </div>
+  </div>
+
+  <!-- Lists Panel -->
+  <div class="panel-backdrop" id="list-panel">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-tabs">
+          <button class="panel-tab active" id="tab-watchlist">Watchlist</button>
+          <button class="panel-tab" id="tab-watchlater">Watch Later</button>
+        </div>
+        <button class="modal-close" id="panel-close">✕</button>
+      </div>
+      <div class="panel-body" id="panel-body"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

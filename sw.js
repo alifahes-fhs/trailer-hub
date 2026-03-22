@@ -3,7 +3,7 @@
    Caches static assets for offline use
    ============================================================ */
 
-const CACHE  = 'trailerhub-v1';
+const CACHE  = 'trailerhub-v2';
 const ASSETS = [
   '/',
   '/index.html',

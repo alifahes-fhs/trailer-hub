@@ -215,13 +215,53 @@ $('movie-search')?.addEventListener('keydown', e => {
 
 function handleSearch() {
   const q = $('movie-search')?.value.trim();
-  if (!q) { shake($('movie-search')?.closest('.search-box')); return; }
-  lastQuery    = q;
-  lastType     = $('search-type')?.value || 'movie';
-  currentPage  = 1;
-  totalPages   = 1;
-  pushState(q, lastType);
-  doSearch(true);
+  
+  const searchGenre = $('genre-select')?.value || '';
+  const searchYear = $('year-select')?.value || '';
+  const searchType = $('search-type')?.value || 'movie';
+  
+  activeGenre = searchGenre;
+  activeYear = searchYear;
+  lastType = searchType;
+  
+  if (q) {
+    lastQuery = q;
+    currentPage = 1;
+    totalPages = 1;
+    pushState(q, lastType);
+    doSearch(true);
+  } 
+  else if (activeGenre || activeYear) {
+    lastQuery = '';
+    currentPage = 1;
+    totalPages = 1;
+    pushState('', '');
+    
+    let filterText = '';
+    if (activeGenre) {
+      const genreBtn = document.querySelector(`.fchip[data-genre="${activeGenre}"]`);
+      filterText = genreBtn ? genreBtn.textContent.trim() : 'Selected';
+    }
+    if (activeYear) {
+      filterText += filterText ? ` · ${activeYear}` : activeYear;
+    }
+    
+    if ($('results-heading')) {
+      $('results-heading').textContent = filterText || 'Discover';
+    }
+    if ($('results-eyebrow')) {
+      $('results-eyebrow').textContent = 'Filtered Results';
+    }
+    
+    doSearch(true);
+  }
+  else {
+    shake($('movie-search')?.closest('.search-box'));
+    $('results-grid').innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>Enter a search term or select filters</h3><p>Try searching for a movie, TV show, or use genre/year filters above.</p></div>`;
+    $('results-section').classList.add('visible');
+    if ($('results-heading')) $('results-heading').textContent = 'Search';
+    if ($('results-eyebrow')) $('results-eyebrow').textContent = 'Start Searching';
+  }
 }
 
 function focusAcItem(idx) {
@@ -240,23 +280,22 @@ async function doSearch(reset = false) {
     section.classList.add('visible');
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     $('results-grid').innerHTML = skeletons(8);
-    // Only update heading if we have a text query — genre chips set their own heading
-    if (lastQuery) {
-      $('results-heading').textContent = `"${lastQuery}"`;
-      $('results-eyebrow').textContent = lastType === 'tv' ? 'TV Shows' : 'Movies';
-    }
     currentPage = 1;
   }
 
   try {
-    const yearParam  = activeYear   ? `&primary_release_year=${activeYear}` : '';
-    const genreParam = activeGenre  ? `&with_genres=${activeGenre}` : '';
-    const certParam  = activeRating ? `&certification_country=US&certification=${activeRating}` : '';
-    const url = lastQuery
-      ? `${BASE_URL}/search/${lastType}?api_key=${API_KEY}&query=${encodeURIComponent(lastQuery)}&language=en-US&page=${currentPage}&include_adult=false`
-      : `${BASE_URL}/discover/${lastType}?api_key=${API_KEY}&language=en-US&sort_by=${activeSort}&page=${currentPage}&include_adult=false${genreParam}${yearParam}${certParam}`;
+    const yearParam = activeYear ? `&primary_release_year=${activeYear}` : '';
+    const genreParam = activeGenre ? `&with_genres=${activeGenre}` : '';
+    const certParam = activeRating ? `&certification_country=US&certification=${activeRating}` : '';
+    
+    let url;
+    if (lastQuery) {
+      url = `${BASE_URL}/search/${lastType}?api_key=${API_KEY}&query=${encodeURIComponent(lastQuery)}&language=en-US&page=${currentPage}&include_adult=false`;
+    } else {
+      url = `${BASE_URL}/discover/${lastType}?api_key=${API_KEY}&language=en-US&sort_by=${activeSort}&page=${currentPage}&include_adult=false${genreParam}${yearParam}${certParam}`;
+    }
 
-    const res  = await fetch(url);
+    const res = await fetch(url);
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
     totalPages = Math.min(data.total_pages || 1, 500);
@@ -265,16 +304,23 @@ async function doSearch(reset = false) {
     if (lastQuery && activeGenre) {
       results = results.filter(i => (i.genre_ids || []).includes(Number(activeGenre)));
     }
-
+    if (lastQuery && activeYear) {
+      results = results.filter(i => {
+        const date = i.release_date || i.first_air_date || '';
+        return date.startsWith(activeYear);
+      });
+    }
+    
     if (reset) {
       $('results-grid').innerHTML = '';
     }
 
-    results.forEach((item, idx) => buildCard(item, (currentPage - 1) * 20 + idx, $('results-grid'), lastType));
-
-    if (!results.length && reset) {
+    if (results.length) {
+      results.forEach((item, idx) => buildCard(item, (currentPage - 1) * 20 + idx, $('results-grid'), lastType));
+    } else if (reset) {
       $('results-grid').innerHTML = `<div class="empty-state"><div class="icon">🎞️</div><h3>No results found</h3><p>Try adjusting your filters or search term.</p></div>`;
     }
+
   } catch {
     if (reset) $('results-grid').innerHTML = `<div class="empty-state"><div class="icon">⚡</div><h3>Something went wrong</h3><p>Check your connection and try again.</p></div>`;
   }
@@ -307,59 +353,19 @@ $('clear-btn')?.addEventListener('click', () => {
 });
 
 /* ================================================================
-   FILTERS
+   FILTERS - Removed sticky bar filters, keep only search bar filters
 ================================================================ */
-// Genre chips (sticky bar)
-document.querySelectorAll('#genre-chips .fchip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#genre-chips .fchip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeGenre = btn.dataset.genre;
-    lastQuery = '';
-    if ($('movie-search')) $('movie-search').value = '';
-    currentPage = 1;
-    lastType = $('search-type')?.value || 'movie';
-    const label = btn.textContent.trim();
-    if ($('results-heading')) $('results-heading').textContent = activeGenre ? label : 'Popular';
-    if ($('results-eyebrow')) $('results-eyebrow').textContent = 'Browse by Genre';
-    doSearch(true);
-    // scroll to results
-    setTimeout(() => $('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-  });
-});
-
-// Also support old .chip class in case filter-bar still exists
-document.querySelectorAll('#genre-chips .chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#genre-chips .chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeGenre = btn.dataset.genre;
-    lastQuery = '';
-    if ($('movie-search')) $('movie-search').value = '';
-    currentPage = 1;
-    lastType = $('search-type')?.value || 'movie';
-    const label = btn.textContent.trim();
-    if ($('results-heading')) $('results-heading').textContent = activeGenre ? label : 'Popular';
-    if ($('results-eyebrow')) $('results-eyebrow').textContent = 'Browse by Genre';
-    doSearch(true);
-  });
-});
-
-// Rating select (sticky bar)
 $('rating-select')?.addEventListener('change', e => { activeRating = e.target.value; currentPage = 1; doSearch(true); });
-// Old rating chips fallback
-document.querySelectorAll('#rating-chips .chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#rating-chips .chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeRating = btn.dataset.rating;
-    currentPage = 1;
-    doSearch(true);
-  });
-});
-
 $('year-filter')?.addEventListener('change',  e => { activeYear  = e.target.value; currentPage = 1; doSearch(true); });
 $('sort-filter')?.addEventListener('change',  e => { activeSort  = e.target.value; currentPage = 1; doSearch(true); });
+
+$('genre-select')?.addEventListener('change', e => {
+  activeGenre = e.target.value;
+});
+
+$('year-select')?.addEventListener('change', e => {
+  activeYear = e.target.value;
+});
 
 /* ================================================================
    BUILD MOVIE CARD
@@ -410,7 +416,7 @@ function buildCard(item, idx, container, type) {
         ${inWLat ? 'Added' : 'Watch Later'}
       </button>
       <button class="card-action-btn detail-btn" style="flex:0.8">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         Info
       </button>
     </div>`;
@@ -440,7 +446,6 @@ function buildCard(item, idx, container, type) {
     window.location.href = `movie.html?id=${item.id}&type=${type}`;
   });
 
-  // Star rating
   card.querySelectorAll('.star').forEach(star => {
     star.addEventListener('click', e => {
       e.stopPropagation();
@@ -451,7 +456,6 @@ function buildCard(item, idx, container, type) {
     });
   });
 
-  // Card keyboard: Enter = open trailer
   card.addEventListener('keydown', e => {
     if (e.key === 'Enter') openTrailerModal(item, type, card);
   });
@@ -522,10 +526,7 @@ $('clear-recent')?.addEventListener('click', () => {
 });
 
 /* ================================================================
-   TRAILER MODAL
-================================================================ */
-/* ================================================================
-   INLINE TRAILER PLAYER — slides in below clicked card
+   INLINE TRAILER PLAYER
 ================================================================ */
 async function openTrailerModal(item, type, anchorEl) {
   const wrap = $('inline-player-wrap');
@@ -537,10 +538,8 @@ async function openTrailerModal(item, type, anchorEl) {
 
   currentItem = { ...item, _type: type };
 
-  // Add to recently viewed
   addRecentlyViewed({ id: item.id, title, year, poster_path: item.poster_path || '', _type: type });
 
-  // Insert player wrap right after the anchor element (or results section)
   const anchor = anchorEl || $('results-section') || $('trending-row');
   if (anchor && anchor.parentNode) {
     anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
@@ -554,7 +553,6 @@ async function openTrailerModal(item, type, anchorEl) {
   wrap.style.display = 'block';
   requestAnimationFrame(() => wrap.classList.add('open'));
 
-  // Scroll player into view smoothly
   setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
 
   try {
@@ -623,17 +621,14 @@ function renderInlineActions() {
   $('modal-detail-btn').addEventListener('click', () => { closeModal(); window.location.href = `movie.html?id=${item.id}&type=${item._type || 'movie'}`; });
 }
 
-// keep renderModalActions as alias so detail page works
 const renderModalActions = renderInlineActions;
 
 /* ================================================================
    KEYBOARD NAVIGATION
 ================================================================ */
 document.addEventListener('keydown', e => {
-  // Escape — close modal or panel
   if (e.key === 'Escape') { closeModal(); closePanel(); closeAC(); return; }
 
-  // Only arrow nav when no input focused
   if (document.activeElement?.tagName === 'INPUT' ||
       document.activeElement?.tagName === 'TEXTAREA' ||
       document.activeElement?.tagName === 'SELECT') return;
@@ -909,7 +904,6 @@ function renderDetail(d, credits, type) {
     btn.textContent = added ? '✓ Watch Later' : '+ Watch Later';
   });
 
-  // Add to recently viewed
   addRecentlyViewed(storeItem);
 }
 
@@ -927,7 +921,6 @@ async function loadSimilar(id, type) {
     section.style.display = 'block';
     items.forEach((item, idx) => buildCard(item, idx, grid, type));
 
-    // Re-observe reveal elements
     section.querySelectorAll('[data-reveal]').forEach(el => revealObs.observe(el));
   } catch {}
 }
@@ -991,4 +984,19 @@ updateBadges();
 renderRecentlyViewed();
 loadTrending();
 readURLState();
-loadMovieDetail(); // only runs on movie.html
+loadMovieDetail();
+
+const toggle = document.getElementById("genre-toggle");
+const dropdown = document.getElementById("genre-dropdown");
+
+if (toggle && dropdown) {
+  toggle.addEventListener("click", () => {
+    dropdown.classList.toggle("show");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove("show");
+    }
+  });
+}

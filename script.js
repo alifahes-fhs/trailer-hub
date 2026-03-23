@@ -1,10 +1,5 @@
 /* ============================================================
    TRAILER HUB — script.js
-   Features: Trailer Modal · Watchlist · Watch Later
-             Genre/Rating/Year/Sort Filters · Daily Trending
-             Autocomplete · Infinite Scroll · Star Ratings
-             Recently Viewed · Dark/Light Mode · PWA
-             Keyboard Navigation · URL State · Movie Detail
    ============================================================ */
 
 const API_KEY  = 'afecc8075597c531e9aae083331172c6';
@@ -23,7 +18,6 @@ let lastType     = 'movie';
 let currentPage  = 1;
 let totalPages   = 1;
 let isLoading    = false;
-let currentItem  = null;
 let activePanel  = 'watchlist';
 let focusedCardIdx = -1;
 
@@ -34,29 +28,25 @@ const $ = id => document.getElementById(id);
    STORAGE HELPERS
 ================================================================ */
 const storage = {
-  get:  key      => JSON.parse(localStorage.getItem(key) || '[]'),
-  set:  (k, v)   => localStorage.setItem(k, JSON.stringify(v)),
-  getObj: key    => JSON.parse(localStorage.getItem(key) || '{}'),
+  get: key => JSON.parse(localStorage.getItem(key) || '[]'),
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  getObj: key => JSON.parse(localStorage.getItem(key) || '{}'),
   setObj: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-  has:  (key, id)=> storage.get(key).some(i => i.id === id),
+  has: (key, id) => storage.get(key).some(i => i.id === id),
   add(key, item) {
     const list = this.get(key);
-    if (!list.find(i => i.id === item.id)) { list.unshift(item); this.set(key, list); }
+    if (!list.find(i => i.id === item.id)) {
+      list.unshift(item);
+      this.set(key, list);
+    }
   },
-  remove(key, id) { this.set(key, this.get(key).filter(i => i.id !== id)); }
+  remove(key, id) {
+    this.set(key, this.get(key).filter(i => i.id !== id));
+  }
 };
 
 /* ================================================================
-   PWA — Register Service Worker
-================================================================ */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
-
-/* ================================================================
-   THEME — Dark / Light
+   THEME
 ================================================================ */
 function initTheme() {
   const saved = localStorage.getItem('theme') || 'dark';
@@ -101,49 +91,7 @@ const revealObs = new IntersectionObserver(entries => {
 document.querySelectorAll('[data-reveal]').forEach(el => revealObs.observe(el));
 
 /* ================================================================
-   PAGE TRANSITIONS
-================================================================ */
-document.addEventListener('click', e => {
-  const a = e.target.closest('a[href]');
-  if (!a) return;
-  const href = a.getAttribute('href');
-  if (!href || href.startsWith('#') || href.startsWith('http') ||
-      href.startsWith('mailto') || href.startsWith('tel')) return;
-  e.preventDefault();
-  document.body.style.opacity    = '0';
-  document.body.style.transition = 'opacity 0.25s';
-  setTimeout(() => { window.location.href = href; }, 260);
-});
-window.addEventListener('pageshow', () => {
-  document.body.style.opacity    = '1';
-  document.body.style.transition = 'opacity 0.35s';
-});
-
-/* ================================================================
-   URL STATE — sync search with URL
-================================================================ */
-function pushState(query, type) {
-  const url = new URL(window.location);
-  if (query) { url.searchParams.set('q', query); url.searchParams.set('type', type); }
-  else { url.searchParams.delete('q'); url.searchParams.delete('type'); }
-  history.pushState({}, '', url);
-}
-
-function readURLState() {
-  const params = new URLSearchParams(window.location.search);
-  const q    = params.get('q');
-  const type = params.get('type') || 'movie';
-  if (q && $('movie-search')) {
-    $('movie-search').value = q;
-    if ($('search-type')) $('search-type').value = type;
-    lastQuery = q;
-    lastType  = type;
-    doSearch(true);
-  }
-}
-
-/* ================================================================
-   AUTOCOMPLETE — debounced, 300ms
+   AUTOCOMPLETE
 ================================================================ */
 let acTimer = null;
 
@@ -161,7 +109,7 @@ $('movie-search')?.addEventListener('blur', () => {
 async function fetchAC(q) {
   try {
     const type = $('search-type')?.value || 'movie';
-    const res  = await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(q)}&page=1&language=en-US`);
+    const res = await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(q)}&page=1&language=en-US`);
     const data = await res.json();
     renderAC(data.results?.slice(0, 6) || [], type);
   } catch { closeAC(); }
@@ -173,11 +121,11 @@ function renderAC(items, type) {
   if (!items.length) { closeAC(); return; }
 
   drop.innerHTML = '';
-  items.forEach((item, i) => {
-    const title  = item.title || item.name || '';
-    const year   = (item.release_date || item.first_air_date || '').slice(0, 4);
+  items.forEach((item) => {
+    const title = item.title || item.name || '';
+    const year = (item.release_date || item.first_air_date || '').slice(0, 4);
     const rating = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
-    const thumb  = item.poster_path
+    const thumb = item.poster_path
       ? `<img class="ac-thumb" src="${IMG_300}${item.poster_path}" alt="${title}">`
       : `<div class="ac-thumb-placeholder">🎬</div>`;
 
@@ -190,7 +138,7 @@ function renderAC(items, type) {
       $('movie-search').value = title;
       closeAC();
       lastQuery = title;
-      lastType  = type;
+      lastType = type;
       doSearch(true);
     });
 
@@ -210,7 +158,6 @@ function closeAC() {
 $('search-btn')?.addEventListener('click', handleSearch);
 $('movie-search')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') { closeAC(); handleSearch(); }
-  if (e.key === 'ArrowDown') { e.preventDefault(); focusAcItem(0); }
 });
 
 function handleSearch() {
@@ -227,31 +174,20 @@ function handleSearch() {
   if (q) {
     lastQuery = q;
     currentPage = 1;
-    totalPages = 1;
     pushState(q, lastType);
     doSearch(true);
   } 
   else if (activeGenre || activeYear) {
     lastQuery = '';
     currentPage = 1;
-    totalPages = 1;
     pushState('', '');
     
     let filterText = '';
-    if (activeGenre) {
-      const genreBtn = document.querySelector(`.fchip[data-genre="${activeGenre}"]`);
-      filterText = genreBtn ? genreBtn.textContent.trim() : 'Selected';
-    }
-    if (activeYear) {
-      filterText += filterText ? ` · ${activeYear}` : activeYear;
-    }
+    if (activeGenre) filterText = 'Genre Filter';
+    if (activeYear) filterText += filterText ? ` · ${activeYear}` : activeYear;
     
-    if ($('results-heading')) {
-      $('results-heading').textContent = filterText || 'Discover';
-    }
-    if ($('results-eyebrow')) {
-      $('results-eyebrow').textContent = 'Filtered Results';
-    }
+    if ($('results-heading')) $('results-heading').textContent = filterText || 'Discover';
+    if ($('results-eyebrow')) $('results-eyebrow').textContent = 'Filtered Results';
     
     doSearch(true);
   }
@@ -259,14 +195,7 @@ function handleSearch() {
     shake($('movie-search')?.closest('.search-box'));
     $('results-grid').innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>Enter a search term or select filters</h3><p>Try searching for a movie, TV show, or use genre/year filters above.</p></div>`;
     $('results-section').classList.add('visible');
-    if ($('results-heading')) $('results-heading').textContent = 'Search';
-    if ($('results-eyebrow')) $('results-eyebrow').textContent = 'Start Searching';
   }
-}
-
-function focusAcItem(idx) {
-  const items = document.querySelectorAll('.ac-item');
-  if (items[idx]) items[idx].focus();
 }
 
 async function doSearch(reset = false) {
@@ -311,9 +240,7 @@ async function doSearch(reset = false) {
       });
     }
     
-    if (reset) {
-      $('results-grid').innerHTML = '';
-    }
+    if (reset) $('results-grid').innerHTML = '';
 
     if (results.length) {
       results.forEach((item, idx) => buildCard(item, (currentPage - 1) * 20 + idx, $('results-grid'), lastType));
@@ -346,42 +273,149 @@ $('clear-btn')?.addEventListener('click', () => {
   $('results-section').classList.remove('visible');
   $('results-grid').innerHTML = '';
   $('movie-search').value = '';
-  lastQuery   = '';
+  lastQuery = '';
   currentPage = 1;
   pushState('', '');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+function pushState(query, type) {
+  const url = new URL(window.location);
+  if (query) { url.searchParams.set('q', query); url.searchParams.set('type', type); }
+  else { url.searchParams.delete('q'); url.searchParams.delete('type'); }
+  history.pushState({}, '', url);
+}
+
+function readURLState() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  const type = params.get('type') || 'movie';
+  if (q && $('movie-search')) {
+    $('movie-search').value = q;
+    if ($('search-type')) $('search-type').value = type;
+    lastQuery = q;
+    lastType = type;
+    doSearch(true);
+  }
+}
+
 /* ================================================================
-   FILTERS - Removed sticky bar filters, keep only search bar filters
+   FILTERS
 ================================================================ */
 $('rating-select')?.addEventListener('change', e => { activeRating = e.target.value; currentPage = 1; doSearch(true); });
-$('year-filter')?.addEventListener('change',  e => { activeYear  = e.target.value; currentPage = 1; doSearch(true); });
-$('sort-filter')?.addEventListener('change',  e => { activeSort  = e.target.value; currentPage = 1; doSearch(true); });
+$('year-filter')?.addEventListener('change', e => { activeYear = e.target.value; currentPage = 1; doSearch(true); });
+$('sort-filter')?.addEventListener('change', e => { activeSort = e.target.value; currentPage = 1; doSearch(true); });
+$('genre-select')?.addEventListener('change', e => { activeGenre = e.target.value; });
+$('year-select')?.addEventListener('change', e => { activeYear = e.target.value; });
 
-$('genre-select')?.addEventListener('change', e => {
-  activeGenre = e.target.value;
-});
+/* ================================================================
+   INLINE TRAILER PLAYER — opens below clicked item, page scrollable
+================================================================ */
+let currentItem = null;
 
-$('year-select')?.addEventListener('change', e => {
-  activeYear = e.target.value;
+async function openTrailerModal(item, type, anchorEl) {
+  const wrap = document.getElementById('inline-player-wrap');
+  if (!wrap) return;
+
+  const title = item.title || item.name || 'Unknown';
+  const year  = (item.release_date || item.first_air_date || '').slice(0, 4);
+  const score = item.vote_average ? item.vote_average.toFixed(1) : '';
+  currentItem = { ...item, _type: type };
+
+  addRecentlyViewed({ id: item.id, title, year, poster_path: item.poster_path || '', _type: type });
+
+  // Insert player after anchor or results section
+  const anchor = anchorEl || document.getElementById('results-section') || document.getElementById('trending-row');
+  if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+
+  document.getElementById('inline-player-title').textContent = title;
+  document.getElementById('inline-player-meta').textContent = [year, score ? '★ '+score : '', type === 'tv' ? 'TV Show' : 'Movie'].filter(Boolean).join(' · ');
+  document.getElementById('inline-player-video').innerHTML = '<div class="inline-loading"><div class="modal-spinner"></div><span>Loading trailer…</span></div>';
+
+  renderInlineActions();
+  wrap.style.display = 'block';
+  requestAnimationFrame(() => wrap.classList.add('open'));
+  setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+
+  try {
+    const url = type === 'tv'
+      ? `${BASE_URL}/tv/${item.id}/videos?api_key=${API_KEY}`
+      : `${BASE_URL}/movie/${item.id}/videos?api_key=${API_KEY}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const vids = data.results || [];
+    const clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+               || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
+               || vids.find(v => v.site === 'YouTube');
+
+    if (clip) {
+      document.getElementById('inline-player-video').innerHTML =
+        `<iframe src="https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1" allow="autoplay;encrypted-media;picture-in-picture" allowfullscreen></iframe>`;
+    } else {
+      document.getElementById('inline-player-video').innerHTML =
+        '<div class="inline-no-trailer"><div class="icon">🎞️</div><p>No trailer available yet</p></div>';
+    }
+  } catch {
+    document.getElementById('inline-player-video').innerHTML =
+      '<div class="inline-no-trailer"><div class="icon">⚡</div><p>Could not load trailer</p></div>';
+  }
+}
+
+function closeInlinePlayer() {
+  const wrap = document.getElementById('inline-player-wrap');
+  if (!wrap) return;
+  wrap.classList.remove('open');
+  setTimeout(() => {
+    wrap.style.display = 'none';
+    document.getElementById('inline-player-video').innerHTML = '';
+  }, 400);
+}
+
+function renderInlineActions() {
+  const el = document.getElementById('inline-player-actions');
+  if (!el || !currentItem) return;
+  const item = currentItem;
+  const inWL   = storage.has('watchlist',  item.id);
+  const inWLat = storage.has('watchlater', item.id);
+  const store  = { id: item.id, title: item.title||item.name, year: (item.release_date||item.first_air_date||'').slice(0,4), poster_path: item.poster_path||'', _type: item._type };
+  el.innerHTML = `
+    <button class="modal-action ${inWL?'saved':''}" id="ipl-wl">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      ${inWL ? 'Saved' : '+ Watchlist'}
+    </button>
+    <button class="modal-action ${inWLat?'saved':''}" id="ipl-wlat">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      ${inWLat ? 'Added' : '+ Watch Later'}
+    </button>
+    <button class="modal-action" id="ipl-detail">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Full Details
+    </button>`;
+  document.getElementById('ipl-wl').onclick    = () => { toggleList('watchlist',  store); updateBadges(); renderInlineActions(); };
+  document.getElementById('ipl-wlat').onclick  = () => { toggleList('watchlater', store); updateBadges(); renderInlineActions(); };
+  document.getElementById('ipl-detail').onclick = () => { closeInlinePlayer(); window.location.href = `movie.html?id=${item.id}&type=${item._type||'movie'}`; };
+}
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'inline-player-close') closeInlinePlayer();
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInlinePlayer(); });
 
 /* ================================================================
    BUILD MOVIE CARD
 ================================================================ */
 function buildCard(item, idx, container, type) {
-  const title    = item.title || item.name || 'Unknown';
-  const year     = (item.release_date || item.first_air_date || '').slice(0, 4);
-  const score    = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
+  const title = item.title || item.name || 'Unknown';
+  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+  const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
   const overview = item.overview || 'No description available.';
-  const inWL     = storage.has('watchlist',  item.id);
-  const inWLat   = storage.has('watchlater', item.id);
+  const inWL = storage.has('watchlist', item.id);
+  const inWLat = storage.has('watchlater', item.id);
   const userRating = getUserRating(item.id);
 
   const card = document.createElement('div');
-  card.className  = 'movie-card';
-  card.tabIndex   = 0;
+  card.className = 'movie-card';
+  card.tabIndex = 0;
   card.dataset.id = item.id;
   card.style.animationDelay = `${(idx % 20) * 0.05}s`;
 
@@ -389,8 +423,8 @@ function buildCard(item, idx, container, type) {
     ? `<img src="${IMG_500}${item.poster_path}" alt="${title}" loading="lazy">`
     : `<div class="no-poster">🎬</div>`;
 
-  const stars = [1,2,3,4,5].map(n =>
-    `<button class="star ${n <= userRating ? 'active' : ''}" data-star="${n}" title="${n} star${n>1?'s':''}">★</button>`
+  const stars = [1, 2, 3, 4, 5].map(n =>
+    `<button class="star ${n <= userRating ? 'active' : ''}" data-star="${n}">★</button>`
   ).join('');
 
   card.innerHTML = `
@@ -398,7 +432,7 @@ function buildCard(item, idx, container, type) {
       ${poster}
       ${score ? `<div class="card-rating">${score}</div>` : ''}
       <div class="card-overlay">
-        <p class="card-overview">${overview}</p>
+        <p class="card-overview">${overview.substring(0, 100)}...</p>
         <button class="watch-trailer-btn">▶ Watch Trailer</button>
       </div>
     </div>
@@ -415,37 +449,52 @@ function buildCard(item, idx, container, type) {
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         ${inWLat ? 'Added' : 'Watch Later'}
       </button>
-      <button class="card-action-btn detail-btn" style="flex:0.8">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Info
-      </button>
+      <button class="card-action-btn detail-btn" style="flex:0.8">Info</button>
     </div>`;
 
   const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: type };
 
-  card.querySelector('.watch-trailer-btn').addEventListener('click', e => { e.stopPropagation(); openTrailerModal(item, type, card); });
+  // Watch Trailer button - opens player page
+  card.querySelector('.watch-trailer-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    openTrailerModal(item, type, card);
+  });
 
+  // Watchlist button
   card.querySelector('.wl-btn').addEventListener('click', e => {
     e.stopPropagation();
     toggleList('watchlist', storeItem);
+    updateBadges();
     const saved = storage.has('watchlist', item.id);
     e.currentTarget.classList.toggle('saved', saved);
     e.currentTarget.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
   });
 
+  // Watch Later button
   card.querySelector('.wlat-btn').addEventListener('click', e => {
     e.stopPropagation();
     toggleList('watchlater', storeItem);
+    updateBadges();
     const added = storage.has('watchlater', item.id);
     e.currentTarget.classList.toggle('saved', added);
     e.currentTarget.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Added' : 'Watch Later'}`;
   });
 
+  // Info button
   card.querySelector('.detail-btn').addEventListener('click', e => {
     e.stopPropagation();
     window.location.href = `movie.html?id=${item.id}&type=${type}`;
   });
 
+  // Enter key opens player page
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      openTrailerModal(item, type, card);
+    }
+  });
+
+  // Star rating
   card.querySelectorAll('.star').forEach(star => {
     star.addEventListener('click', e => {
       e.stopPropagation();
@@ -456,16 +505,9 @@ function buildCard(item, idx, container, type) {
     });
   });
 
-  card.addEventListener('keydown', e => {
-    if (e.key === 'Enter') openTrailerModal(item, type, card);
-  });
-
   container.appendChild(card);
 }
 
-/* ================================================================
-   STAR RATINGS (localStorage)
-================================================================ */
 function getUserRating(id) {
   return storage.getObj('ratings')[id] || 0;
 }
@@ -489,11 +531,14 @@ function addRecentlyViewed(item) {
 
 function renderRecentlyViewed() {
   const section = $('recently-section');
-  const row     = $('recently-row');
+  const row = $('recently-row');
   if (!section || !row) return;
 
   const items = storage.get('recently');
-  if (!items.length) { section.style.display = 'none'; return; }
+  if (!items.length) {
+    section.style.display = 'none';
+    return;
+  }
 
   section.style.display = 'block';
   row.innerHTML = '';
@@ -515,7 +560,9 @@ function renderRecentlyViewed() {
         <div class="trending-sub">${item.year || ''} · ${item._type === 'tv' ? 'TV' : 'Movie'}</div>
       </div>`;
 
-    card.addEventListener('click', () => openTrailerModal(item, item._type || 'movie', card));
+    card.addEventListener('click', () => {
+      openTrailerModal(item, item._type || 'movie');
+    });
     row.appendChild(card);
   });
 }
@@ -526,189 +573,30 @@ $('clear-recent')?.addEventListener('click', () => {
 });
 
 /* ================================================================
-   INLINE TRAILER PLAYER
-================================================================ */
-async function openTrailerModal(item, type, anchorEl) {
-  const wrap = $('inline-player-wrap');
-  if (!wrap) return;
-
-  const title = item.title || item.name || 'Unknown';
-  const year  = (item.release_date || item.first_air_date || '').slice(0, 4);
-  const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
-
-  currentItem = { ...item, _type: type };
-
-  addRecentlyViewed({ id: item.id, title, year, poster_path: item.poster_path || '', _type: type });
-
-  const anchor = anchorEl || $('results-section') || $('trending-row');
-  if (anchor && anchor.parentNode) {
-    anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
-  }
-
-  $('inline-player-title').textContent = title;
-  $('inline-player-meta').textContent  = [year, score, type === 'tv' ? 'TV Show' : 'Movie'].filter(Boolean).join(' · ');
-  $('inline-player-video').innerHTML   = `<div class="inline-loading"><div class="modal-spinner"></div><span>Fetching trailer…</span></div>`;
-
-  renderInlineActions();
-  wrap.style.display = 'block';
-  requestAnimationFrame(() => wrap.classList.add('open'));
-
-  setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-
-  try {
-    const endpoint = type === 'tv'
-      ? `${BASE_URL}/tv/${item.id}/videos?api_key=${API_KEY}`
-      : `${BASE_URL}/movie/${item.id}/videos?api_key=${API_KEY}`;
-    const res    = await fetch(endpoint);
-    const data   = await res.json();
-    const videos = data.results || [];
-    const clip   =
-      videos.find(v => v.site === 'YouTube' && v.type === 'Trailer') ||
-      videos.find(v => v.site === 'YouTube' && v.type === 'Teaser')  ||
-      videos.find(v => v.site === 'YouTube');
-
-    if (clip) {
-      $('inline-player-video').innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-    } else {
-      $('inline-player-video').innerHTML = `<div class="inline-no-trailer"><div class="icon">🎞️</div><p>No trailer available yet</p></div>`;
-    }
-  } catch {
-    $('inline-player-video').innerHTML = `<div class="inline-no-trailer"><div class="icon">⚡</div><p>Could not load trailer</p></div>`;
-  }
-}
-
-function closeModal() {
-  const wrap = $('inline-player-wrap');
-  if (!wrap) return;
-  wrap.classList.remove('open');
-  setTimeout(() => {
-    wrap.style.display = 'none';
-    $('inline-player-video').innerHTML = '';
-  }, 400);
-}
-
-$('inline-player-close')?.addEventListener('click', closeModal);
-
-function renderInlineActions() {
-  if (!currentItem || !$('inline-player-actions')) return;
-  const item   = currentItem;
-  const inWL   = storage.has('watchlist',  item.id);
-  const inWLat = storage.has('watchlater', item.id);
-  const storeItem = {
-    id: item.id,
-    title: item.title || item.name,
-    year: (item.release_date || item.first_air_date || '').slice(0, 4),
-    poster_path: item.poster_path || '',
-    _type: item._type
-  };
-
-  $('inline-player-actions').innerHTML = `
-    <button class="modal-action ${inWL ? 'saved' : ''}" id="modal-wl-btn">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      ${inWL ? 'Saved' : '+ Watchlist'}
-    </button>
-    <button class="modal-action ${inWLat ? 'saved' : ''}" id="modal-wlat-btn">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      ${inWLat ? 'Added' : '+ Watch Later'}
-    </button>
-    <button class="modal-action" id="modal-detail-btn">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Full Details
-    </button>`;
-
-  $('modal-wl-btn').addEventListener('click',     () => { toggleList('watchlist',  storeItem); renderInlineActions(); });
-  $('modal-wlat-btn').addEventListener('click',   () => { toggleList('watchlater', storeItem); renderInlineActions(); });
-  $('modal-detail-btn').addEventListener('click', () => { closeModal(); window.location.href = `movie.html?id=${item.id}&type=${item._type || 'movie'}`; });
-}
-
-const renderModalActions = renderInlineActions;
-
-/* ================================================================
-   KEYBOARD NAVIGATION
-================================================================ */
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closePanel(); closeAC(); return; }
-
-  if (document.activeElement?.tagName === 'INPUT' ||
-      document.activeElement?.tagName === 'TEXTAREA' ||
-      document.activeElement?.tagName === 'SELECT') return;
-
-  const cards = [...document.querySelectorAll('#results-grid .movie-card')];
-  if (!cards.length) return;
-
-  const cols = Math.round(document.querySelector('#results-grid').offsetWidth / (cards[0].offsetWidth + 18)) || 4;
-
-  if (e.key === 'ArrowRight') { e.preventDefault(); moveFocus(cards, focusedCardIdx + 1); }
-  if (e.key === 'ArrowLeft')  { e.preventDefault(); moveFocus(cards, focusedCardIdx - 1); }
-  if (e.key === 'ArrowDown')  { e.preventDefault(); moveFocus(cards, focusedCardIdx + cols); }
-  if (e.key === 'ArrowUp')    { e.preventDefault(); moveFocus(cards, focusedCardIdx - cols); }
-  if (e.key === 'Enter' && focusedCardIdx >= 0) cards[focusedCardIdx]?.click();
-  if (e.key === '/') { e.preventDefault(); $('movie-search')?.focus(); }
-});
-
-function moveFocus(cards, idx) {
-  const clamped = Math.max(0, Math.min(cards.length - 1, idx));
-  focusedCardIdx = clamped;
-  cards[clamped]?.focus();
-  showKbdHint();
-}
-
-function showKbdHint() {
-  let hint = document.querySelector('.kbd-hint');
-  if (!hint) {
-    hint = document.createElement('div');
-    hint.className = 'kbd-hint';
-    hint.innerHTML = `<kbd>↑↓←→</kbd> navigate &nbsp; <kbd>Enter</kbd> play trailer &nbsp; <kbd>/</kbd> search`;
-    document.body.appendChild(hint);
-  }
-  hint.classList.add('show');
-  clearTimeout(hint._timer);
-  hint._timer = setTimeout(() => hint.classList.remove('show'), 3000);
-}
-
-document.querySelectorAll('#results-grid').forEach(grid => {
-  grid.addEventListener('focusin', e => {
-    const card = e.target.closest('.movie-card');
-    if (card) focusedCardIdx = [...grid.querySelectorAll('.movie-card')].indexOf(card);
-  });
-});
-
-/* ================================================================
    WATCHLIST / WATCH LATER
 ================================================================ */
 function toggleList(key, item) {
   storage.has(key, item.id) ? storage.remove(key, item.id) : storage.add(key, item);
-  updateBadges();
 }
 
 function updateBadges() {
   ['watchlist', 'watchlater'].forEach(key => {
     const count = storage.get(key).length;
-    const el    = $(key === 'watchlist' ? 'watchlist-count' : 'watchlater-count');
-    if (!el) return;
-    el.textContent = count;
-    el.classList.toggle('zero', count === 0);
-    el.classList.add('bump');
-    setTimeout(() => el.classList.remove('bump'), 300);
+    const el = $(key === 'watchlist' ? 'watchlist-count' : 'watchlater-count');
+    if (el) {
+      el.textContent = count;
+      el.classList.toggle('zero', count === 0);
+    }
   });
 }
 
-document.querySelectorAll('#nav-watchlist-btn').forEach(b  => b.addEventListener('click', () => openPanel('watchlist')));
+document.querySelectorAll('#nav-watchlist-btn').forEach(b => b.addEventListener('click', () => openPanel('watchlist')));
 document.querySelectorAll('#nav-watchlater-btn').forEach(b => b.addEventListener('click', () => openPanel('watchlater')));
-document.querySelectorAll('#panel-close').forEach(b        => b.addEventListener('click', closePanel));
-document.querySelectorAll('#list-panel').forEach(el        => el.addEventListener('click', e => { if (e.target === el) closePanel(); }));
-
-document.querySelectorAll('#tab-watchlist').forEach(b  => b.addEventListener('click', () => { activePanel = 'watchlist';  syncPanelTabs(); renderPanel(); }));
-document.querySelectorAll('#tab-watchlater').forEach(b => b.addEventListener('click', () => { activePanel = 'watchlater'; syncPanelTabs(); renderPanel(); }));
-
-function syncPanelTabs() {
-  document.querySelectorAll('#tab-watchlist').forEach(b  => b.classList.toggle('active', activePanel === 'watchlist'));
-  document.querySelectorAll('#tab-watchlater').forEach(b => b.classList.toggle('active', activePanel === 'watchlater'));
-}
+document.querySelectorAll('#panel-close').forEach(b => b.addEventListener('click', closePanel));
+document.querySelectorAll('#list-panel').forEach(el => el.addEventListener('click', e => { if (e.target === el) closePanel(); }));
 
 function openPanel(tab) {
   activePanel = tab;
-  syncPanelTabs();
   renderPanel();
   document.querySelectorAll('#list-panel').forEach(el => el.classList.add('open'));
   document.body.style.overflow = 'hidden';
@@ -720,85 +608,93 @@ function closePanel() {
 }
 
 function renderPanel() {
-  const key   = activePanel;
+  const key = activePanel;
   const items = storage.get(key);
   document.querySelectorAll('#panel-body').forEach(body => {
-    if (!body) return;
     if (!items.length) {
-      body.innerHTML = `<div class="panel-empty"><div class="icon">${key === 'watchlist' ? '🔖' : '🕐'}</div><p>Your ${key === 'watchlist' ? 'watchlist' : 'watch later list'} is empty.<br>Add movies while browsing!</p></div>`;
+      body.innerHTML = `<div class="panel-empty"><div class="icon">${key === 'watchlist' ? '🔖' : '🕐'}</div><p>Your ${key === 'watchlist' ? 'watchlist' : 'watch later list'} is empty.</p></div>`;
       return;
     }
     body.innerHTML = '';
     items.forEach((item, idx) => {
       const row = document.createElement('div');
       row.className = 'panel-item';
-      row.style.animationDelay = `${idx * 0.04}s`;
       const thumb = item.poster_path
         ? `<img class="panel-thumb" src="${IMG_300}${item.poster_path}" alt="${item.title}">`
         : `<div class="panel-thumb-placeholder">🎬</div>`;
-      row.innerHTML = `${thumb}<div class="panel-info"><div class="panel-item-title">${item.title||item.name}</div><div class="panel-item-meta">${item.year||''} · ${item._type==='tv'?'TV Show':'Movie'}</div></div><div class="panel-item-actions"><button class="panel-item-btn play-btn" title="Trailer">▶</button><button class="panel-item-btn" title="Details" style="font-size:11px">ℹ</button><button class="panel-item-btn remove-btn" title="Remove">✕</button></div>`;
-      row.querySelector('.play-btn').addEventListener('click', () => { closePanel(); openTrailerModal(item, item._type||'movie'); });
-      row.querySelectorAll('.panel-item-btn')[1].addEventListener('click', () => { closePanel(); window.location.href=`movie.html?id=${item.id}&type=${item._type||'movie'}`; });
-      row.querySelector('.remove-btn').addEventListener('click', () => { storage.remove(key,item.id); updateBadges(); renderPanel(); });
+      row.innerHTML = `${thumb}<div class="panel-info"><div class="panel-item-title">${item.title || item.name}</div><div class="panel-item-meta">${item.year || ''} · ${item._type === 'tv' ? 'TV Show' : 'Movie'}</div></div><div class="panel-item-actions"><button class="panel-item-btn play-btn">▶</button><button class="panel-item-btn remove-btn">✕</button></div>`;
+      
+      row.querySelector('.play-btn').addEventListener('click', () => {
+        closePanel();
+        openTrailerModal(item, item._type || 'movie');
+      });
+      
+      row.querySelector('.remove-btn').addEventListener('click', () => {
+        storage.remove(key, item.id);
+        updateBadges();
+        renderPanel();
+      });
       body.appendChild(row);
     });
   });
 }
 
 /* ================================================================
-   TRENDING — Daily, every page load
+   TRENDING
 ================================================================ */
 async function loadTrending() {
   const row = $('trending-row');
   if (!row) return;
 
-  row.innerHTML = Array.from({ length: 8 }, () => `
-    <div class="trending-card" style="pointer-events:none">
-      <div class="sk-shimmer" style="width:100%;height:114px"></div>
-      <div style="padding:10px 12px">
-        <div class="sk-shimmer sk-bar" style="height:11px;border-radius:4px;margin:0 0 6px"></div>
-        <div class="sk-shimmer sk-bar" style="height:9px;border-radius:4px;width:55%"></div>
-      </div>
-    </div>`).join('');
+  row.innerHTML = '<div style="text-align:center;padding:20px">Loading trending...</div>';
 
   try {
-    const res  = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
-    if (!res.ok) throw new Error();
-    const data  = await res.json();
+    const res = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
+    const data = await res.json();
     const items = data.results || [];
     row.innerHTML = '';
 
     items.slice(0, 14).forEach((item, idx) => {
       const title = item.title || item.name || 'Unknown';
-      const type  = item.media_type === 'tv' ? 'TV Show' : 'Movie';
-      const year  = (item.release_date || item.first_air_date || '').slice(0, 4);
-      const card  = document.createElement('div');
+      const mediaType = item.media_type === 'tv' ? 'tv' : 'movie';
+      const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+      const card = document.createElement('div');
       card.className = 'trending-card';
       card.style.cursor = 'pointer';
-      card.style.animationDelay = `${idx * 0.04}s`;
-      const thumb = item.backdrop_path
-        ? `<img class="trending-thumb" src="${IMG_300}${item.backdrop_path}" alt="${title}" loading="lazy">`
+      const thumb = item.backdrop_path || item.poster_path
+        ? `<img class="trending-thumb" src="${IMG_300}${item.backdrop_path || item.poster_path}" alt="${title}" loading="lazy">`
         : `<div class="trending-thumb" style="display:flex;align-items:center;justify-content:center;font-size:28px">🎬</div>`;
-      card.innerHTML = `<div class="trending-num">${idx + 1}</div>${thumb}<div class="trending-info"><div class="trending-title">${title}</div><div class="trending-sub">${type}${year?` · ${year}`:''}</div></div>`;
-      card.addEventListener('click', () => openTrailerModal(item, item.media_type || 'movie', card));
+      
+      card.innerHTML = `
+        <div class="trending-num">${idx + 1}</div>
+        ${thumb}
+        <div class="trending-info">
+          <div class="trending-title">${title}</div>
+          <div class="trending-sub">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
+        </div>`;
+      
+      card.addEventListener('click', () => {
+        openTrailerModal(item, mediaType, card);
+      });
+      
       row.appendChild(card);
     });
 
     const t = $('trending-time');
-    if (t) t.textContent = `Updated ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+    if (t) t.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   } catch {
     row.innerHTML = '<p style="color:var(--faint);font-size:13px;padding:20px 0">Could not load trending titles.</p>';
   }
 }
 
 /* ================================================================
-   MOVIE DETAIL PAGE (movie.html)
+   MOVIE DETAIL PAGE
 ================================================================ */
 async function loadMovieDetail() {
   if (!$('movie-detail')) return;
   const params = new URLSearchParams(window.location.search);
-  const id     = params.get('id');
-  const type   = params.get('type') || 'movie';
+  const id = params.get('id');
+  const type = params.get('type') || 'movie';
   if (!id) { window.location.href = 'index.html'; return; }
 
   try {
@@ -806,9 +702,8 @@ async function loadMovieDetail() {
       fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&language=en-US`),
       fetch(`${BASE_URL}/${type}/${id}/credits?api_key=${API_KEY}&language=en-US`)
     ]);
-    const detail  = await detailRes.json();
+    const detail = await detailRes.json();
     const credits = await creditsRes.json();
-
     document.title = `${detail.title || detail.name} — Trailer Hub`;
     renderDetail(detail, credits, type);
     loadSimilar(id, type);
@@ -818,20 +713,20 @@ async function loadMovieDetail() {
 }
 
 function renderDetail(d, credits, type) {
-  const title    = d.title || d.name || 'Unknown';
-  const year     = (d.release_date || d.first_air_date || '').slice(0, 4);
-  const runtime  = d.runtime ? `${Math.floor(d.runtime/60)}h ${d.runtime%60}m` : (d.episode_run_time?.[0] ? `${d.episode_run_time[0]}m/ep` : '');
-  const score    = d.vote_average ? d.vote_average.toFixed(1) : '';
-  const votes    = d.vote_count  ? d.vote_count.toLocaleString() : '';
-  const genres   = (d.genres || []).map(g => `<span class="detail-genre-tag">${g.name}</span>`).join('');
+  const title = d.title || d.name || 'Unknown';
+  const year = (d.release_date || d.first_air_date || '').slice(0, 4);
+  const runtime = d.runtime ? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m` : (d.episode_run_time?.[0] ? `${d.episode_run_time[0]}m/ep` : '');
+  const score = d.vote_average ? d.vote_average.toFixed(1) : '';
+  const votes = d.vote_count ? d.vote_count.toLocaleString() : '';
+  const genres = (d.genres || []).map(g => `<span class="detail-genre-tag">${g.name}</span>`).join('');
   const director = (credits.crew || []).find(c => c.job === 'Director');
-  const cast     = (credits.cast || []).slice(0, 12);
-  const inWL     = storage.has('watchlist',  d.id);
-  const inWLat   = storage.has('watchlater', d.id);
-  const budget   = d.budget   ? `$${(d.budget/1e6).toFixed(0)}M`   : '—';
-  const revenue  = d.revenue  ? `$${(d.revenue/1e6).toFixed(0)}M`  : '—';
-  const status   = d.status   || '—';
-  const lang     = d.original_language?.toUpperCase() || '—';
+  const cast = (credits.cast || []).slice(0, 12);
+  const inWL = storage.has('watchlist', d.id);
+  const inWLat = storage.has('watchlater', d.id);
+  const budget = d.budget ? `$${(d.budget / 1e6).toFixed(0)}M` : '—';
+  const revenue = d.revenue ? `$${(d.revenue / 1e6).toFixed(0)}M` : '—';
+  const status = d.status || '—';
+  const lang = d.original_language?.toUpperCase() || '—';
 
   const backdropStyle = d.backdrop_path
     ? `background-image:url(${IMG_ORI}${d.backdrop_path})`
@@ -848,7 +743,7 @@ function renderDetail(d, credits, type) {
     return `<div class="cast-card">${photo}<div class="cast-name">${p.name}</div><div class="cast-role">${p.character}</div></div>`;
   }).join('');
 
-  const storeItem = { id: d.id, title, year, poster_path: d.poster_path||'', _type: type };
+  const storeItem = { id: d.id, title, year, poster_path: d.poster_path || '', _type: type };
 
   $('movie-detail').innerHTML = `
     <div class="detail-backdrop">
@@ -888,20 +783,26 @@ function renderDetail(d, credits, type) {
       </div>
     </div>`;
 
-  $('detail-trailer-btn')?.addEventListener('click', () => openTrailerModal(d, type, $('movie-detail')));
+  $('detail-trailer-btn')?.addEventListener('click', () => {
+    openTrailerModal(d, type, document.getElementById('movie-detail'));
+  });
+  
   $('detail-wl-btn')?.addEventListener('click', () => {
     toggleList('watchlist', storeItem);
     const saved = storage.has('watchlist', d.id);
     const btn = $('detail-wl-btn');
     btn.classList.toggle('saved', saved);
     btn.textContent = saved ? '✓ In Watchlist' : '+ Watchlist';
+    updateBadges();
   });
+  
   $('detail-wlat-btn')?.addEventListener('click', () => {
     toggleList('watchlater', storeItem);
     const added = storage.has('watchlater', d.id);
     const btn = $('detail-wlat-btn');
     btn.classList.toggle('saved', added);
     btn.textContent = added ? '✓ Watch Later' : '+ Watch Later';
+    updateBadges();
   });
 
   addRecentlyViewed(storeItem);
@@ -909,13 +810,13 @@ function renderDetail(d, credits, type) {
 
 async function loadSimilar(id, type) {
   try {
-    const res  = await fetch(`${BASE_URL}/${type}/${id}/similar?api_key=${API_KEY}&language=en-US&page=1`);
+    const res = await fetch(`${BASE_URL}/${type}/${id}/similar?api_key=${API_KEY}&language=en-US&page=1`);
     const data = await res.json();
     const items = (data.results || []).filter(i => i.poster_path).slice(0, 10);
     if (!items.length) return;
 
     const section = $('similar-section');
-    const grid    = $('similar-grid');
+    const grid = $('similar-grid');
     if (!section || !grid) return;
 
     section.style.display = 'block';
@@ -926,7 +827,7 @@ async function loadSimilar(id, type) {
 }
 
 /* ================================================================
-   SKELETON HELPER
+   HELPER FUNCTIONS
 ================================================================ */
 function skeletons(n) {
   return Array.from({ length: n }, () => `
@@ -937,45 +838,11 @@ function skeletons(n) {
     </div>`).join('');
 }
 
-/* ================================================================
-   SHAKE
-================================================================ */
 function shake(el) {
   if (!el) return;
-  el.style.animation = 'none';
-  el.offsetHeight;
   el.style.animation = 'shakeField 0.45s ease';
   el.addEventListener('animationend', () => { el.style.animation = ''; }, { once: true });
 }
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `@keyframes shakeField{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}`;
-document.head.appendChild(shakeStyle);
-
-/* ================================================================
-   CONTACT FORM
-================================================================ */
-const contactForm = $('suggestions-form');
-const submitBtn   = $('submit-btn');
-const toast       = $('toast');
-
-contactForm?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const name = contactForm.name?.value.trim();
-  const email = contactForm.email?.value.trim();
-  const msg   = contactForm.suggestion?.value.trim();
-  if (!name || !email || !msg) {
-    [contactForm.name, contactForm.email, contactForm.suggestion].forEach(el => { if (el && !el.value.trim()) shake(el); });
-    return;
-  }
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner"></span>Sending…';
-  await new Promise(r => setTimeout(r, 1400));
-  submitBtn.innerHTML = 'Message sent ✓';
-  contactForm.reset();
-  toast?.classList.add('show');
-  setTimeout(() => toast?.classList.remove('show'), 4000);
-  setTimeout(() => { submitBtn.disabled = false; submitBtn.innerHTML = 'Send Message →'; }, 3500);
-});
 
 /* ================================================================
    INIT
@@ -986,6 +853,12 @@ loadTrending();
 readURLState();
 loadMovieDetail();
 
+// Add shake animation style
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `@keyframes shakeField{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}`;
+document.head.appendChild(shakeStyle);
+
+// Genre dropdown toggle
 const toggle = document.getElementById("genre-toggle");
 const dropdown = document.getElementById("genre-dropdown");
 

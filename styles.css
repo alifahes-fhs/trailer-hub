@@ -1055,117 +1055,18 @@ kbd {
   #inline-player-title { font-size: 20px; }
 }
 
-/* ================================================================
-   STICKY FILTER BAR
-================================================================ */
-#sticky-filters {
-  position: fixed;
-  top: 70px;
-  left: 0; right: 0;
-  z-index: 190;
-  background: #0d0d1c;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  padding: 0 48px;
-}
-body.light #sticky-filters { background: #f0efe9; }
-
-
-#sticky-filters-inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 56px;
-  overflow: visible;
-}
-
-/* Genre chips row — horizontally scrollable */
-#genre-chips {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  flex: 1;
-  scrollbar-width: none;
-  padding: 8px 0;
-}
-#genre-chips::-webkit-scrollbar { display: none; }
-
-/* remove old wrong selector */
-#genre-chips.filter-chips-row { all: unset; display: flex; align-items: center; gap: 6px; overflow-x: auto; flex: 1; scrollbar-width: none; padding: 8px 0; }
-
-.fchip {
-  font-family: var(--font-b);
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--muted);
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  padding: 5px 14px;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s var(--ease);
-}
-.fchip:hover { color: var(--text); border-color: var(--border2); background: var(--glass-b); }
-.fchip.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  font-weight: 500;
-  box-shadow: 0 4px 14px rgba(108,99,255,0.35);
-}
-
-/* Extra filters — rating, year, sort */
-#extra-filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  border-left: 1px solid var(--border);
-  padding-left: 12px;
-}
-
-.fselect {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  color: var(--muted);
-  font-family: var(--font-b);
-  font-size: 12px;
-  padding: 5px 12px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  white-space: nowrap;
-}
-.fselect:hover { border-color: var(--border2); color: var(--text); }
-.fselect option { background: var(--bg2); }
-
-/* Adjust hero top so content isn't hidden behind sticky bar */
-.hero { padding-top: 0; }
-
-@media (max-width: 860px) {
-  #sticky-filters { padding: 0 16px; }
-  #extra-filters { display: none; }
-}
-@media (max-width: 600px) {
-  #sticky-filters-inner { height: 48px; }
-  .fchip { font-size: 11px; padding: 4px 11px; }
-}
 
 /* ================================================================
-   STICKY FILTER BAR — visual polish fix
+   STICKY FILTER BAR — always visible, desktop + mobile
 ================================================================ */
 #sticky-filters {
   position: fixed;
   top: 70px; left: 0; right: 0;
   z-index: 190;
-  background: rgba(8,8,16,0.97);
+  background: rgba(7,7,15,0.97);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   padding: 0 40px;
 }
-
 body.light #sticky-filters { background: rgba(245,244,240,0.97); }
 
 #sticky-filters-inner {
@@ -1182,7 +1083,7 @@ body.light #sticky-filters { background: rgba(245,244,240,0.97); }
   overflow-x: auto;
   flex: 1;
   scrollbar-width: none;
-  padding: 6px 0;
+  padding: 4px 0;
 }
 #genre-chips::-webkit-scrollbar { display: none; }
 
@@ -1190,16 +1091,16 @@ body.light #sticky-filters { background: rgba(245,244,240,0.97); }
   font-family: var(--font-b);
   font-size: 12px;
   font-weight: 400;
-  color: rgba(238,234,248,0.6);
+  color: rgba(238,234,248,0.55);
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 99px;
-  padding: 5px 13px;
+  padding: 5px 14px;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s;
-  line-height: 1;
+  line-height: 1.4;
 }
 .fchip:hover {
   color: #fff;
@@ -1211,8 +1112,11 @@ body.light #sticky-filters { background: rgba(245,244,240,0.97); }
   border-color: var(--accent);
   color: #fff;
   font-weight: 500;
-  box-shadow: 0 3px 12px rgba(108,99,255,0.4);
+  box-shadow: 0 3px 12px rgba(108,99,255,0.35);
 }
+body.light .fchip { color: rgba(26,26,46,0.55); background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+body.light .fchip:hover { color: #1a1a2e; background: rgba(0,0,0,0.08); }
+body.light .fchip.active { color: #fff; background: var(--accent); border-color: var(--accent); }
 
 #extra-filters {
   display: flex;
@@ -1226,9 +1130,9 @@ body.light #sticky-filters { background: rgba(245,244,240,0.97); }
 .fselect {
   font-family: var(--font-b);
   font-size: 12px;
-  color: rgba(238,234,248,0.6);
+  color: rgba(238,234,248,0.55);
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 99px;
   padding: 5px 12px;
   outline: none;
@@ -1237,14 +1141,36 @@ body.light #sticky-filters { background: rgba(245,244,240,0.97); }
   appearance: none;
   -webkit-appearance: none;
 }
-.fselect:hover {
-  color: #fff;
-  border-color: rgba(255,255,255,0.18);
-}
+.fselect:hover { color: #fff; border-color: rgba(255,255,255,0.18); }
 .fselect option { background: #0d0d1c; color: #fff; }
-
-body.light .fchip { color: rgba(26,26,46,0.6); background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
-body.light .fchip:hover { color: #1a1a2e; background: rgba(0,0,0,0.08); }
-body.light .fchip.active { color: #fff; }
-body.light .fselect { color: rgba(26,26,46,0.6); background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+body.light .fselect { color: rgba(26,26,46,0.55); background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
 body.light .fselect option { background: #f0efe9; color: #1a1a2e; }
+
+/* ── Mobile: stack into two rows ── */
+@media (max-width: 768px) {
+  #sticky-filters { padding: 0; top: 70px; }
+  #sticky-filters-inner {
+    flex-direction: column;
+    height: auto;
+    padding: 8px 16px 6px;
+    gap: 6px;
+    align-items: stretch;
+  }
+  #genre-chips { gap: 5px; padding: 2px 0; }
+  .fchip { font-size: 11px; padding: 5px 11px; }
+  #extra-filters {
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding-left: 0;
+    padding-top: 6px;
+    gap: 5px;
+  }
+  .fselect { font-size: 11px; padding: 5px 10px; flex: 1; }
+  /* Push hero down more on mobile */
+  .hero { padding-top: 160px !important; }
+}
+
+@media (min-width: 769px) {
+  /* Push hero content below header(70px) + filter bar(52px) */
+  .hero { padding-top: 122px !important; }
+}

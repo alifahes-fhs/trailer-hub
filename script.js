@@ -917,7 +917,7 @@ async function playTrailerInsideCard(item, type, card) {
   console.log('Trailer container found:', trailerContainer);
   
   // If already playing, close it
-  if (trailerContainer.style.display === 'block') {
+  if (trailerContainer.style.display === 'block' && trailerContainer.innerHTML !== '') {
     trailerContainer.style.display = 'none';
     trailerContainer.innerHTML = '';
     console.log('Closed trailer');
@@ -940,7 +940,7 @@ async function playTrailerInsideCard(item, type, card) {
   // Show loading inside card
   trailerContainer.style.display = 'block';
   trailerContainer.innerHTML = `
-    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px;">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px; z-index: 10;">
       <div style="width: 40px; height: 40px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
       <div style="font-size: 12px;">Loading trailer...</div>
     </div>
@@ -960,21 +960,33 @@ async function playTrailerInsideCard(item, type, card) {
     const vids = data.results || [];
     console.log('Videos found:', vids.length);
     
-    const clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
-               || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
-               || vids.find(v => v.site === 'YouTube');
+    // Look for official trailer first
+    let clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official === true);
+    if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer');
+    if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Teaser');
+    if (!clip) clip = vids.find(v => v.site === 'YouTube');
     
     if (clip) {
       console.log('Playing trailer:', clip.key);
-      trailerContainer.innerHTML = `
-        <iframe 
-          src="https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0" 
-          frameborder="0" 
-          allow="autoplay; encrypted-media; picture-in-picture" 
-          allowfullscreen
-          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px;">
-        </iframe>
-      `;
+      
+      // Clear the container and add the iframe
+      trailerContainer.innerHTML = '';
+      
+      // Create iframe element directly
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.allowFullscreen = true;
+      iframe.style.position = "absolute";
+      iframe.style.top = "0";
+      iframe.style.left = "0";
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.style.borderRadius = "12px";
+      
+      trailerContainer.appendChild(iframe);
+      
     } else {
       console.log('No trailer found');
       trailerContainer.innerHTML = `

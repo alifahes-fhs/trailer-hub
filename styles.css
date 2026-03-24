@@ -1119,3 +1119,28 @@ kbd {
   background: #7b72ff !important;
   transform: scale(1.02);
 }
+/* Trailer container styles */
+.card-trailer-container {
+  position: relative !important;
+  padding-bottom: 56.25% !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  margin: 8px !important;
+  background: #000 !important;
+  transition: all 0.3s ease !important;
+}
+
+.card-trailer-container iframe {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -899,14 +899,28 @@ async function loadTrending() {
 //helper func 
 // Add this function after your other functions
 async function playTrailerInsideCard(item, type, card) {
+  console.log('playTrailerInsideCard called for:', item.title || item.name);
+  
   // Find the trailer container inside the card
-  const trailerContainer = card.querySelector('.card-trailer-container');
-  if (!trailerContainer) return;
+  let trailerContainer = card.querySelector('.card-trailer-container');
+  
+  // If no container, try to find by ID
+  if (!trailerContainer) {
+    trailerContainer = card.querySelector(`#trailer-${item.id}, #trending-trailer-${item.id}, #recent-trailer-${item.id}`);
+  }
+  
+  if (!trailerContainer) {
+    console.log('No trailer container found');
+    return;
+  }
+  
+  console.log('Trailer container found:', trailerContainer);
   
   // If already playing, close it
   if (trailerContainer.style.display === 'block') {
     trailerContainer.style.display = 'none';
     trailerContainer.innerHTML = '';
+    console.log('Closed trailer');
     return;
   }
   
@@ -926,11 +940,9 @@ async function playTrailerInsideCard(item, type, card) {
   // Show loading inside card
   trailerContainer.style.display = 'block';
   trailerContainer.innerHTML = `
-    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white;">
-      <div style="text-align: center;">
-        <div style="width: 30px; height: 30px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px;"></div>
-        Loading trailer...
-      </div>
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px;">
+      <div style="width: 40px; height: 40px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+      <div style="font-size: 12px;">Loading trailer...</div>
     </div>
   `;
   
@@ -941,14 +953,19 @@ async function playTrailerInsideCard(item, type, card) {
     const videoUrl = type === 'tv'
       ? `${BASE_URL}/tv/${item.id}/videos?api_key=${API_KEY}`
       : `${BASE_URL}/movie/${item.id}/videos?api_key=${API_KEY}`;
+    
+    console.log('Fetching from:', videoUrl);
     const res = await fetch(videoUrl);
     const data = await res.json();
     const vids = data.results || [];
+    console.log('Videos found:', vids.length);
+    
     const clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
                || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
                || vids.find(v => v.site === 'YouTube');
     
     if (clip) {
+      console.log('Playing trailer:', clip.key);
       trailerContainer.innerHTML = `
         <iframe 
           src="https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0" 
@@ -959,6 +976,7 @@ async function playTrailerInsideCard(item, type, card) {
         </iframe>
       `;
     } else {
+      console.log('No trailer found');
       trailerContainer.innerHTML = `
         <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); flex-direction: column; gap: 8px;">
           <div style="font-size: 32px;">🎬</div>
@@ -968,6 +986,7 @@ async function playTrailerInsideCard(item, type, card) {
       `;
     }
   } catch (error) {
+    console.error('Error loading trailer:', error);
     trailerContainer.innerHTML = `
       <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted);">
         Error loading trailer
@@ -975,7 +994,6 @@ async function playTrailerInsideCard(item, type, card) {
     `;
   }
 }
-
 /* ================================================================
    MOVIE DETAIL PAGE
 ================================================================ */

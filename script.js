@@ -647,21 +647,16 @@ function renderRecentlyViewed() {
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
     
-    // IMPORTANT: Get the trailer button with the correct class
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
     
-    // Make sure the button exists before adding event
     if (trailerBtn) {
       trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         console.log('Trailer button clicked for:', title);
-        playTrailerInsideCard(item, mediaType, card);
+        fetchFullAndPlay(item, mediaType, card); // ✅ FIXED
       });
-    } else {
-      console.log('Trailer button not found for:', title);
     }
     
-    // Watchlist button
     const wlBtn = card.querySelector('.recent-wl-btn');
     if (wlBtn) {
       wlBtn.addEventListener('click', (e) => {
@@ -675,7 +670,6 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Watch Later button
     const wlatBtn = card.querySelector('.recent-wlat-btn');
     if (wlatBtn) {
       wlatBtn.addEventListener('click', (e) => {
@@ -689,7 +683,6 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Info button
     const detailBtn = card.querySelector('.recent-detail-btn');
     if (detailBtn) {
       detailBtn.addEventListener('click', (e) => {
@@ -698,12 +691,10 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Click on card also plays trailer (but not on buttons)
     card.addEventListener('click', (e) => {
-      // Don't trigger if clicking any button
       if (e.target.tagName === 'BUTTON') return;
       if (e.target.closest('button')) return;
-      playTrailerInsideCard(item, mediaType, card);
+      fetchFullAndPlay(item, mediaType, card); // ✅ FIXED
     });
     
     row.appendChild(card);
@@ -851,6 +842,9 @@ async function loadTrending() {
         playTrailerInsideCard(item, mediaType, card);
       });
       
+
+
+
       // Watchlist button
       card.querySelector('.trending-wl-btn').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1004,6 +998,21 @@ async function playTrailerInsideCard(item, type, card) {
         Error loading trailer
       </div>
     `;
+  }
+}
+
+
+
+
+
+async function fetchFullAndPlay(item, type, card) {
+  try {
+    const res = await fetch(`${BASE_URL}/${type}/${item.id}?api_key=${API_KEY}`);
+    const fullItem = await res.json();
+
+    playTrailerInsideCard(fullItem, type, card);
+  } catch (err) {
+    console.error("Error fetching full item:", err);
   }
 }
 /* ================================================================

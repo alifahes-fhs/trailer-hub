@@ -627,7 +627,7 @@ function renderRecentlyViewed() {
       <div style="padding: 10px 12px;">
         <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
         <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
-        <button class="recent-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
+        <button class="recent-watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
         <div style="display: flex; gap: 6px; margin-top: 8px;">
           <button class="recent-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -647,47 +647,62 @@ function renderRecentlyViewed() {
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
     
-    // Watch Trailer button - FIXED: clickable
-    const trailerBtn = card.querySelector('.recent-trailer-btn');
-    trailerBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      playTrailerInsideCard(item, mediaType, card);
-    });
+    // IMPORTANT: Get the trailer button with the correct class
+    const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
+    
+    // Make sure the button exists before adding event
+    if (trailerBtn) {
+      trailerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log('Trailer button clicked for:', title);
+        playTrailerInsideCard(item, mediaType, card);
+      });
+    } else {
+      console.log('Trailer button not found for:', title);
+    }
     
     // Watchlist button
-    card.querySelector('.recent-wl-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleList('watchlist', storeItem);
-      updateBadges();
-      const saved = storage.has('watchlist', item.id);
-      const btn = card.querySelector('.recent-wl-btn');
-      btn.classList.toggle('saved', saved);
-      btn.style.background = saved ? 'var(--accent-dim)' : 'var(--glass)';
-      btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
-    });
+    const wlBtn = card.querySelector('.recent-wl-btn');
+    if (wlBtn) {
+      wlBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleList('watchlist', storeItem);
+        updateBadges();
+        const saved = storage.has('watchlist', item.id);
+        wlBtn.classList.toggle('saved', saved);
+        wlBtn.style.background = saved ? 'var(--accent-dim)' : 'var(--glass)';
+        wlBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
+      });
+    }
     
     // Watch Later button
-    card.querySelector('.recent-wlat-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleList('watchlater', storeItem);
-      updateBadges();
-      const added = storage.has('watchlater', item.id);
-      const btn = card.querySelector('.recent-wlat-btn');
-      btn.classList.toggle('saved', added);
-      btn.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
-      btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
-    });
+    const wlatBtn = card.querySelector('.recent-wlat-btn');
+    if (wlatBtn) {
+      wlatBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleList('watchlater', storeItem);
+        updateBadges();
+        const added = storage.has('watchlater', item.id);
+        wlatBtn.classList.toggle('saved', added);
+        wlatBtn.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
+        wlatBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
+      });
+    }
     
     // Info button
-    card.querySelector('.recent-detail-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
-    });
+    const detailBtn = card.querySelector('.recent-detail-btn');
+    if (detailBtn) {
+      detailBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
+      });
+    }
     
     // Click on card also plays trailer (but not on buttons)
     card.addEventListener('click', (e) => {
-      if (e.target === trailerBtn || trailerBtn.contains(e.target)) return;
-      if (e.target.classList?.contains('recent-wl-btn') || e.target.classList?.contains('recent-wlat-btn') || e.target.classList?.contains('recent-detail-btn')) return;
+      // Don't trigger if clicking any button
+      if (e.target.tagName === 'BUTTON') return;
+      if (e.target.closest('button')) return;
       playTrailerInsideCard(item, mediaType, card);
     });
     

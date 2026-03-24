@@ -1090,3 +1090,32 @@ kbd {
 .recent-card:hover .card-play-hint {
   opacity: 1;
 }
+
+/* Trailer inside card */
+.card-trailer-container {
+  transition: all 0.3s ease;
+}
+
+.card-trailer-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.watch-trailer-btn {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.watch-trailer-btn:hover {
+  background: #7b72ff !important;
+  transform: scale(1.02);
+}

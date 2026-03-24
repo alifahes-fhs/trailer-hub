@@ -10,7 +10,6 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header id="site-header">
     <a href="index.html" class="logo">TRAILER HUB</a>
     <nav>
@@ -29,7 +28,32 @@
     </nav>
   </header>
 
-  <!-- HERO -->
+  <!-- STICKY GENRE BAR -->
+  <div id="sticky-filters" style="position:fixed;top:70px;left:0;right:0;z-index:190;background:#0a0a14;border-bottom:1px solid rgba(255,255,255,0.08);padding:0 40px;">
+    <div id="sticky-filters-inner" style="display:flex;align-items:center;gap:10px;height:52px;">
+      <div id="genre-chips" style="display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;padding:4px 0;">
+        <button class="fchip active" data-genre="">🎬 All</button>
+        <button class="fchip" data-genre="28">💥 Action</button>
+        <button class="fchip" data-genre="35">😂 Comedy</button>
+        <button class="fchip" data-genre="18">🎭 Drama</button>
+        <button class="fchip" data-genre="27">👻 Horror</button>
+        <button class="fchip" data-genre="878">🚀 Sci-Fi</button>
+        <button class="fchip" data-genre="10749">💕 Romance</button>
+        <button class="fchip" data-genre="16">✏️ Animation</button>
+        <button class="fchip" data-genre="53">🔪 Thriller</button>
+        <button class="fchip" data-genre="99">🎥 Documentary</button>
+        <button class="fchip" data-genre="14">🧙 Fantasy</button>
+        <button class="fchip" data-genre="80">🕵️ Crime</button>
+        <button class="fchip" data-genre="10751">👨‍👩‍👧 Family</button>
+      </div>
+      <div id="extra-filters" style="display:flex;align-items:center;gap:6px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.07);padding-left:10px;">
+        <select class="fselect" id="rating-select"><option value="">All Ratings</option><option value="G">G</option><option value="PG">PG</option><option value="PG-13">PG-13</option><option value="R">R</option></select>
+        <select class="fselect" id="year-filter"><option value="">Any Year</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2015">2010s</option><option value="2000">2000s</option></select>
+        <select class="fselect" id="sort-filter"><option value="popularity.desc">🔥 Popular</option><option value="vote_average.desc">⭐ Top Rated</option><option value="release_date.desc">🆕 Newest</option></select>
+      </div>
+    </div>
+  </div>
+
   <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-lines"></div>
@@ -41,25 +65,7 @@
         <div class="search-wrapper-ac">
           <div class="search-box">
             <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
-            <select id="search-type">
-              <option value="movie">Movie</option>
-              <option value="tv">TV Show</option>
-            </select>
-            <select id="genre-select">
-              <option value="">All Genres</option>
-              <option value="28">Action</option>
-              <option value="35">Comedy</option>
-              <option value="18">Drama</option>
-              <option value="27">Horror</option>
-              <option value="878">Sci-Fi</option>
-            </select>
-            <select id="year-select">
-              <option value="">Any Year</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-            </select>
+            <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>
             <button id="search-btn">Search</button>
           </div>
           <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
@@ -74,16 +80,14 @@
     <div class="scroll-cue"><div class="scroll-cue-track"><div class="scroll-cue-fill"></div></div><span class="scroll-cue-text">Scroll</span></div>
   </section>
 
-  <!-- Recently Viewed -->
   <section class="recently-section" id="recently-section" style="display:none">
-    <div class="section-header" style="padding: 48px 48px 0">
+    <div class="section-header" style="padding:48px 48px 0">
       <div><div class="section-eyebrow">Your History</div><h2 class="section-title">RECENTLY VIEWED</h2></div>
       <button class="clear-btn" id="clear-recent">Clear</button>
     </div>
-    <div class="trending-row" id="recently-row" style="padding: 20px 48px 0"></div>
+    <div class="trending-row" id="recently-row" style="padding:20px 48px 0"></div>
   </section>
 
-  <!-- Results -->
   <section class="results-section" id="results-section">
     <div class="section-header">
       <div>
@@ -96,7 +100,6 @@
     <div id="scroll-sentinel" style="height:1px;margin-top:20px"></div>
   </section>
 
-  <!-- Trending -->
   <section class="trending-section" id="trending">
     <div class="section-header" data-reveal>
       <div><div class="section-eyebrow">Updated Daily · Live Stats</div><h2 class="section-title">TRENDING NOW</h2></div>
@@ -120,8 +123,8 @@
     <div class="footer-links"><a href="contact.html">Contact</a><a href="#">Privacy</a></div>
   </footer>
 
-  <!-- Inline Trailer Player - Expandable -->
-  <div id="inline-player-wrap">
+  <!-- ONE inline player — no duplicates -->
+  <div id="inline-player-wrap" style="display:none">
     <div id="inline-player-box">
       <div id="inline-player-header">
         <div>
@@ -134,11 +137,6 @@
       <div id="inline-player-actions"></div>
     </div>
   </div>
-
-  <!-- Expand/Collapse Toggle Button (appears when player is open) -->
-  <button id="player-expand-toggle" class="expand-toggle-btn" style="display:none">
-    <span class="expand-icon">⤢</span> Full Width
-  </button>
 
   <!-- Lists Panel -->
   <div class="panel-backdrop" id="list-panel">

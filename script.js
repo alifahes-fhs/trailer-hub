@@ -650,10 +650,10 @@ function renderRecentlyViewed() {
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
     
     if (trailerBtn) {
-      trailerBtn.addEventListener('click', (e) => {
+      trailerBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        console.log('Trailer button clicked for:', title);
-        fetchFullAndPlay(item, mediaType, card); // ✅ FIXED
+        // directly play inside card - no need for fetchFullAndPlay
+        playTrailerInsideCard(item, mediaType, card);
       });
     }
     
@@ -993,6 +993,19 @@ trailerContainer.style.minHeight = "200px"; // 👈 CRITICAL
 
 trailerContainer.innerHTML = '';
 trailerContainer.appendChild(iframe);
+
+// Add fullscreen button
+const fsBtn = document.createElement('button');
+fsBtn.innerHTML = '⛶';
+fsBtn.title = 'Fullscreen';
+fsBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:6px;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.2s;';
+fsBtn.onmouseenter = () => fsBtn.style.background = 'rgba(108,99,255,0.8)';
+fsBtn.onmouseleave = () => fsBtn.style.background = 'rgba(0,0,0,0.6)';
+fsBtn.onclick = () => {
+  if (iframe.requestFullscreen) iframe.requestFullscreen();
+  else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+};
+trailerContainer.appendChild(fsBtn);
       
     } else {
       console.log('No trailer found');

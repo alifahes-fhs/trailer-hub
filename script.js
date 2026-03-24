@@ -300,153 +300,98 @@ function readURLState() {
 }
 
 /* ================================================================
-   FILTERS
+   TRENDING
 ================================================================ */
-$('rating-select')?.addEventListener('change', e => { activeRating = e.target.value; currentPage = 1; doSearch(true); });
-$('year-filter')?.addEventListener('change', e => { activeYear = e.target.value; currentPage = 1; doSearch(true); });
-$('sort-filter')?.addEventListener('change', e => { activeSort = e.target.value; currentPage = 1; doSearch(true); });
-$('genre-select')?.addEventListener('change', e => { activeGenre = e.target.value; });
-$('year-select')?.addEventListener('change', e => { activeYear = e.target.value; });
+async function loadTrending() {
+  const row = $('trending-row');
+  if (!row) return;
+  row.innerHTML = skeletons(6);
 
-/* ================================================================
-   INLINE TRAILER PLAYER — opens below clicked item, page scrollable
-================================================================ */
-let currentItem = null;
-
-// REPLACE the entire openTrailerModal function with this:
-async function openTrailerModal(item, type, anchorEl) {
-  // Find the trailer container inside the card
-  let trailerContainer = null;
-  let parentCard = null;
-  
-  // If anchor is a card element, find its trailer container
-  if (anchorEl && anchorEl.classList && (anchorEl.classList.contains('movie-card') || anchorEl.classList.contains('trending-card'))) {
-    parentCard = anchorEl;
-    trailerContainer = parentCard.querySelector('.card-trailer-container');
-  } 
-  // If anchor is a button inside card, find parent card
-  else if (anchorEl && anchorEl.closest) {
-    parentCard = anchorEl.closest('.movie-card, .trending-card');
-    if (parentCard) {
-      trailerContainer = parentCard.querySelector('.card-trailer-container');
-    }
-  }
-  
-  // If no container found, create one
-  if (!trailerContainer && parentCard) {
-    trailerContainer = document.createElement('div');
-    trailerContainer.className = 'card-trailer-container';
-    trailerContainer.style.cssText = 'display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 8px;';
-    parentCard.appendChild(trailerContainer);
-  }
-  
-  // If we have a container, toggle/play inside card
-  if (trailerContainer) {
-    // If already playing, close it
-    if (trailerContainer.style.display === 'block') {
-      trailerContainer.style.display = 'none';
-      trailerContainer.innerHTML = '';
-      return;
-    }
-    
-    // Close any other open trailers in other cards
-    document.querySelectorAll('.card-trailer-container').forEach(c => {
-      if (c !== trailerContainer) {
-        c.style.display = 'none';
-        c.innerHTML = '';
-      }
-    });
-    
-    // Add to recently viewed
-    const title = item.title || item.name || 'Unknown';
-    const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-    addRecentlyViewed({ id: item.id, title, year, poster_path: item.poster_path || '', _type: type });
-    
-    // Show loading inside card
-    trailerContainer.style.display = 'block';
-    trailerContainer.innerHTML = `
-      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white;">
-        <div style="text-align: center;">
-          <div style="width: 30px; height: 30px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px;"></div>
-          Loading trailer...
-        </div>
-      </div>
-    `;
-    
-    // Scroll to card
-    parentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    try {
-      const videoUrl = type === 'tv'
-        ? `${BASE_URL}/tv/${item.id}/videos?api_key=${API_KEY}`
-        : `${BASE_URL}/movie/${item.id}/videos?api_key=${API_KEY}`;
-      const res = await fetch(videoUrl);
-      const data = await res.json();
-      const vids = data.results || [];
-      const clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
-                 || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
-                 || vids.find(v => v.site === 'YouTube');
+  try {
+    const res = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
+    const data = await res.json();
+    const items = (data.results || []).slice(0, 15);
+    row.innerHTML = '';
+    items.forEach((item, idx) => {
+      const title = item.title || item.name || 'Unknown';
+      const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+      const mediaType = item.media_type || 'movie';
+      const inWL = storage.has('watchlist', item.id);
+      const inWLat = storage.has('watchlater', item.id);
       
-      if (clip) {
-        trailerContainer.innerHTML = `
-          <iframe 
-            src="https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0" 
-            frameborder="0" 
-            allow="autoplay; encrypted-media; picture-in-picture" 
-            allowfullscreen
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px;">
-          </iframe>
-        `;
-      } else {
-        trailerContainer.innerHTML = `
-          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); flex-direction: column; gap: 8px;">
-            <div style="font-size: 32px;">🎬</div>
-            <p style="font-size: 12px;">No trailer available</p>
-            <button onclick="this.parentElement.parentElement.style.display='none'" style="padding: 4px 12px; background: var(--accent); border: none; border-radius: 20px; color: white; font-size: 10px; cursor: pointer;">Close</button>
+      const card = document.createElement('div');
+      card.className = 'trending-card';
+      card.style.animationDelay = `${idx * 0.05}s`;
+
+      const thumb = item.poster_path
+        ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" loading="lazy">`
+        : `<div class="trending-thumb" style="display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
+
+      card.innerHTML = `
+        ${thumb}
+        <div class="trending-overlay">
+          <div class="trending-title">${title}</div>
+          <div class="trending-sub">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
+          <button class="trending-watch-trailer-btn">▶ WATCH TRAILER</button>
+          <div style="display: flex; gap: 6px; margin-top: 8px;">
+            <button class="trending-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              ${inWL ? 'Saved' : 'Watchlist'}
+            </button>
+            <button class="trending-wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              ${inWLat ? 'Later' : 'Later'}
+            </button>
+            <button class="trending-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-size: 10px; font-weight: 600; color: white;">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Info
+            </button>
           </div>
-        `;
-      }
-    } catch (error) {
-      trailerContainer.innerHTML = `
-        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted);">
-          Error loading trailer
         </div>
-      `;
-    }
+        <div class="card-trailer-container" id="trending-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
+
+      const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
+      
+      const trailerBtn = card.querySelector('.trending-watch-trailer-btn');
+      trailerBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        playTrailerInsideCard(item, mediaType, card);
+      });
+      
+      const wlBtn = card.querySelector('.trending-wl-btn');
+      wlBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleList('watchlist', storeItem);
+        updateBadges();
+        const saved = storage.has('watchlist', item.id);
+        wlBtn.classList.toggle('saved', saved);
+        wlBtn.style.background = saved ? 'var(--accent-dim)' : 'var(--glass)';
+        wlBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
+      });
+      
+      const wlatBtn = card.querySelector('.trending-wlat-btn');
+      wlatBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleList('watchlater', storeItem);
+        updateBadges();
+        const added = storage.has('watchlater', item.id);
+        wlatBtn.classList.toggle('saved', added);
+        wlatBtn.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
+        wlatBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
+      });
+      
+      const detailBtn = card.querySelector('.trending-detail-btn');
+      detailBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
+      });
+
+      row.appendChild(card);
+    });
+  } catch {
+    row.innerHTML = '<div style="padding:20px;color:var(--faint)">Could not load trending.</div>';
   }
 }
-
-
-
-function renderInlineActions() {
-  const el = document.getElementById('inline-player-actions');
-  if (!el || !currentItem) return;
-  const item = currentItem;
-  const inWL   = storage.has('watchlist',  item.id);
-  const inWLat = storage.has('watchlater', item.id);
-  const store  = { id: item.id, title: item.title||item.name, year: (item.release_date||item.first_air_date||'').slice(0,4), poster_path: item.poster_path||'', _type: item._type };
-  el.innerHTML = `
-    <button class="modal-action ${inWL?'saved':''}" id="ipl-wl">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      ${inWL ? 'Saved' : '+ Watchlist'}
-    </button>
-    <button class="modal-action ${inWLat?'saved':''}" id="ipl-wlat">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      ${inWLat ? 'Added' : '+ Watch Later'}
-    </button>
-    <button class="modal-action" id="ipl-detail">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Full Details
-    </button>`;
-  document.getElementById('ipl-wl').onclick    = () => { toggleList('watchlist',  store); updateBadges(); renderInlineActions(); };
-  document.getElementById('ipl-wlat').onclick  = () => { toggleList('watchlater', store); updateBadges(); renderInlineActions(); };
-  document.getElementById('ipl-detail').onclick = () => { closeInlinePlayer(); window.location.href = `movie.html?id=${item.id}&type=${item._type||'movie'}`; };
-}
-
-document.addEventListener('click', e => {
-  if (e.target.id === 'inline-player-close') closeInlinePlayer();
-});
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInlinePlayer(); });
 
 /* ================================================================
    BUILD MOVIE CARD
@@ -690,208 +635,40 @@ function renderRecentlyViewed() {
         window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
       });
     }
-    
-    card.addEventListener('click', (e) => {
-      if (e.target.tagName === 'BUTTON') return;
-      if (e.target.closest('button')) return;
-      fetchFullAndPlay(item, mediaType, card); // ✅ FIXED
-    });
-    
+
     row.appendChild(card);
   });
 }
 
-$('clear-recent')?.addEventListener('click', () => {
-  storage.set('recently', []);
-  renderRecentlyViewed();
-});
-
 /* ================================================================
-   WATCHLIST / WATCH LATER
+   LIST MANAGEMENT
 ================================================================ */
 function toggleList(key, item) {
-  storage.has(key, item.id) ? storage.remove(key, item.id) : storage.add(key, item);
+  if (storage.has(key, item.id)) {
+    storage.remove(key, item.id);
+  } else {
+    storage.add(key, item);
+  }
+  renderPanels();
 }
 
 function updateBadges() {
-  ['watchlist', 'watchlater'].forEach(key => {
-    const count = storage.get(key).length;
-    const el = $(key === 'watchlist' ? 'watchlist-count' : 'watchlater-count');
-    if (el) {
-      el.textContent = count;
-      el.classList.toggle('zero', count === 0);
-    }
+  const wlCount = storage.get('watchlist').length;
+  const wlatCount = storage.get('watchlater').length;
+  
+  document.querySelectorAll('.wl-badge').forEach(b => {
+    b.textContent = wlCount;
+    b.style.display = wlCount ? 'flex' : 'none';
   });
-}
-
-document.querySelectorAll('#nav-watchlist-btn').forEach(b => b.addEventListener('click', () => openPanel('watchlist')));
-document.querySelectorAll('#nav-watchlater-btn').forEach(b => b.addEventListener('click', () => openPanel('watchlater')));
-document.querySelectorAll('#panel-close').forEach(b => b.addEventListener('click', closePanel));
-document.querySelectorAll('#list-panel').forEach(el => el.addEventListener('click', e => { if (e.target === el) closePanel(); }));
-
-function openPanel(tab) {
-  activePanel = tab;
-  renderPanel();
-  document.querySelectorAll('#list-panel').forEach(el => el.classList.add('open'));
-  document.body.style.overflow = 'hidden';
-}
-
-function closePanel() {
-  document.querySelectorAll('#list-panel').forEach(el => el.classList.remove('open'));
-  document.body.style.overflow = '';
-}
-
-function renderPanel() {
-  const key = activePanel;
-  const items = storage.get(key);
-  document.querySelectorAll('#panel-body').forEach(body => {
-    if (!items.length) {
-      body.innerHTML = `<div class="panel-empty"><div class="icon">${key === 'watchlist' ? '🔖' : '🕐'}</div><p>Your ${key === 'watchlist' ? 'watchlist' : 'watch later list'} is empty.</p></div>`;
-      return;
-    }
-    body.innerHTML = '';
-    items.forEach((item, idx) => {
-      const row = document.createElement('div');
-      row.className = 'panel-item';
-      const thumb = item.poster_path
-        ? `<img class="panel-thumb" src="${IMG_300}${item.poster_path}" alt="${item.title}">`
-        : `<div class="panel-thumb-placeholder">🎬</div>`;
-      row.innerHTML = `${thumb}<div class="panel-info"><div class="panel-item-title">${item.title || item.name}</div><div class="panel-item-meta">${item.year || ''} · ${item._type === 'tv' ? 'TV Show' : 'Movie'}</div></div><div class="panel-item-actions"><button class="panel-item-btn play-btn">▶</button><button class="panel-item-btn remove-btn">✕</button></div>`;
-      
-      row.querySelector('.play-btn').addEventListener('click', () => {
-        closePanel();
-        openTrailerModal(item, item._type || 'movie');
-      });
-      
-      row.querySelector('.remove-btn').addEventListener('click', () => {
-        storage.remove(key, item.id);
-        updateBadges();
-        renderPanel();
-      });
-      body.appendChild(row);
-    });
+  document.querySelectorAll('.wlat-badge').forEach(b => {
+    b.textContent = wlatCount;
+    b.style.display = wlatCount ? 'flex' : 'none';
   });
 }
 
 /* ================================================================
-   TRENDING
+   TRAILER MODAL & PLAYER
 ================================================================ */
-async function loadTrending() {
-  const row = $('trending-row');
-  if (!row) return;
-
-  row.innerHTML = '<div style="text-align:center;padding:20px">Loading trending...</div>';
-
-  try {
-    const res = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
-    const data = await res.json();
-    const items = data.results || [];
-    row.innerHTML = '';
-
-    items.slice(0, 14).forEach((item, idx) => {
-      const title = item.title || item.name || 'Unknown';
-      const mediaType = item.media_type === 'tv' ? 'tv' : 'movie';
-      const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-      const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
-      const inWL = storage.has('watchlist', item.id);
-      const inWLat = storage.has('watchlater', item.id);
-      
-      const card = document.createElement('div');
-      card.className = 'trending-card';
-      card.style.cursor = 'pointer';
-      card.style.background = 'var(--bg2)';
-      card.style.borderRadius = '16px';
-      card.style.overflow = 'hidden';
-      card.style.border = '1px solid var(--border)';
-      card.style.transition = 'transform 0.3s, border-color 0.2s';
-      
-      const thumb = item.backdrop_path || item.poster_path
-        ? `<img class="trending-thumb" src="${IMG_300}${item.backdrop_path || item.poster_path}" alt="${title}" loading="lazy" style="width: 100%; height: 114px; object-fit: cover;">`
-        : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
-      
-      card.innerHTML = `
-        <div class="trending-num" style="position: absolute; top: 6px; left: 12px; font-family: var(--font-d); font-size: 64px; line-height: 1; color: rgba(255,255,255,0.1); pointer-events: none; z-index: 1;">${idx + 1}</div>
-        ${thumb}
-        <div style="padding: 10px 12px;">
-          <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
-          <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}${score ? ` · ${score}` : ''}</div>
-          <button class="watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
-          <div style="display: flex; gap: 6px; margin-top: 8px;">
-            <button class="trending-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-              ${inWL ? 'Saved' : 'Watchlist'}
-            </button>
-            <button class="trending-wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              ${inWLat ? 'Later' : 'Later'}
-            </button>
-           <button class="trending-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-size: 10px; font-weight: 600; color: white;">
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              Info
-            </button>
-          </div>
-        </div>
-        <div class="card-trailer-container" id="trending-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
-      
-      const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
-      
-      // Watch Trailer button
-      const trailerBtn = card.querySelector('.watch-trailer-btn');
-      trailerBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        playTrailerInsideCard(item, mediaType, card);
-      });
-      
-
-
-
-      // Watchlist button
-      card.querySelector('.trending-wl-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleList('watchlist', storeItem);
-        updateBadges();
-        const saved = storage.has('watchlist', item.id);
-        const btn = card.querySelector('.trending-wl-btn');
-        btn.classList.toggle('saved', saved);
-        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
-      });
-      
-      // Watch Later button
-      card.querySelector('.trending-wlat-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleList('watchlater', storeItem);
-        updateBadges();
-        const added = storage.has('watchlater', item.id);
-        const btn = card.querySelector('.trending-wlat-btn');
-        btn.classList.toggle('saved', added);
-        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
-      });
-      
-      // Info button
-      card.querySelector('.trending-detail-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
-      });
-      
-      // Click on card also plays trailer (but not on buttons)
-      card.addEventListener('click', (e) => {
-        if (e.target === trailerBtn || trailerBtn.contains(e.target)) return;
-        if (e.target.classList?.contains('trending-wl-btn') || e.target.classList?.contains('trending-wlat-btn') || e.target.classList?.contains('trending-detail-btn')) return;
-        playTrailerInsideCard(item, mediaType, card);
-      });
-      
-      row.appendChild(card);
-    });
-
-    const t = $('trending-time');
-    if (t) t.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-  } catch {
-    row.innerHTML = '<p style="color:var(--faint);font-size:13px;padding:20px 0">Could not load trending titles.</p>';
-  }
-}
-
-//helper func 
-// Add this function after your other functions
 async function playTrailerInsideCard(item, type, card) {
   console.log('playTrailerInsideCard called for:', item.title || item.name);
   
@@ -995,6 +772,15 @@ trailerContainer.style.margin = "0 8px 8px 8px";
 trailerContainer.innerHTML = '';
 trailerContainer.appendChild(iframe);
 
+// Add fallback link for "Bot Check" issue
+const fallback = document.createElement('div');
+fallback.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);color:#fff;padding:8px;font-size:11px;text-align:center;z-index:5;display:flex;flex-direction:column;gap:4px;';
+fallback.innerHTML = `
+  <div>Video not loading? YouTube might need a bot check.</div>
+  <a href="https://www.youtube.com/watch?v=${clip.key}" target="_blank" style="color:var(--accent);text-decoration:underline;font-weight:600;">Open directly on YouTube →</a>
+`;
+trailerContainer.appendChild(fallback);
+
 // Add fullscreen button
 const fsBtn = document.createElement('button');
 fsBtn.innerHTML = '⛶';
@@ -1027,8 +813,6 @@ trailerContainer.appendChild(fsBtn);
     `;
   }
 }
-
-
 
 
 

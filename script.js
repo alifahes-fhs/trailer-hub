@@ -487,17 +487,17 @@ function buildCard(item, idx, container, type) {
       <div class="card-title">${title}${year ? ` <span style="color:var(--faint);font-weight:300">(${year})</span>` : ''}</div>
       <div class="star-rating">${stars}<span class="star-label">${userRating ? `${userRating}/5` : 'Rate'}</span></div>
     </div>
-    <div class="card-actions" style="display: flex; gap: 8px; padding: 12px 14px 14px; border-top: 1px solid var(--border); margin-top: 4px;">
-      <button class="card-action-btn wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 11px; font-weight: 500;">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    <div class="card-actions" style="display: flex; gap: 6px; padding: 10px 12px 14px; border-top: 1px solid var(--border); margin-top: 4px;">
+      <button class="card-action-btn wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 4px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
         ${inWL ? 'Saved' : 'Watchlist'}
       </button>
-      <button class="card-action-btn wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 11px; font-weight: 500;">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        ${inWLat ? 'Later' : 'Watch Later'}
+      <button class="card-action-btn wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 4px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        ${inWLat ? 'Later' : 'Later'}
       </button>
-      <button class="card-action-btn detail-btn" style="flex: 0.8; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 11px; font-weight: 500;">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <button class="card-action-btn detail-btn" style="flex: 0.8; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 4px; border-radius: 8px; background: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-size: 10px; font-weight: 600; color: white;">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
         Info
       </button>
     </div>
@@ -506,7 +506,8 @@ function buildCard(item, idx, container, type) {
   const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: type };
 
   // Watch Trailer button - plays inside the card
-  card.querySelector('.watch-trailer-btn').addEventListener('click', e => {
+  const trailerBtn = card.querySelector('.watch-trailer-btn');
+  trailerBtn.addEventListener('click', e => {
     e.stopPropagation();
     e.preventDefault();
     playTrailerInsideCard(item, type, card);
@@ -519,7 +520,8 @@ function buildCard(item, idx, container, type) {
     updateBadges();
     const saved = storage.has('watchlist', item.id);
     e.currentTarget.classList.toggle('saved', saved);
-    e.currentTarget.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
+    e.currentTarget.style.background = saved ? 'var(--accent-dim)' : 'var(--glass)';
+    e.currentTarget.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
   });
 
   // Watch Later button
@@ -529,11 +531,13 @@ function buildCard(item, idx, container, type) {
     updateBadges();
     const added = storage.has('watchlater', item.id);
     e.currentTarget.classList.toggle('saved', added);
-    e.currentTarget.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Watch Later'}`;
+    e.currentTarget.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
+    e.currentTarget.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
   });
 
-  // Info button
-  card.querySelector('.detail-btn').addEventListener('click', e => {
+  // Info button - VISIBLE NOW
+  const infoBtn = card.querySelector('.detail-btn');
+  infoBtn.addEventListener('click', e => {
     e.stopPropagation();
     window.location.href = `movie.html?id=${item.id}&type=${type}`;
   });
@@ -623,7 +627,7 @@ function renderRecentlyViewed() {
       <div style="padding: 10px 12px;">
         <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
         <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
-        <button class="watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
+        <button class="recent-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
         <div style="display: flex; gap: 6px; margin-top: 8px;">
           <button class="recent-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -633,8 +637,8 @@ function renderRecentlyViewed() {
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             ${inWLat ? 'Later' : 'Later'}
           </button>
-          <button class="recent-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <button class="recent-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-size: 10px; font-weight: 600; color: white;">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
             Info
           </button>
         </div>
@@ -643,8 +647,8 @@ function renderRecentlyViewed() {
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
     
-    // Watch Trailer button
-    const trailerBtn = card.querySelector('.watch-trailer-btn');
+    // Watch Trailer button - FIXED: clickable
+    const trailerBtn = card.querySelector('.recent-trailer-btn');
     trailerBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       playTrailerInsideCard(item, mediaType, card);
@@ -658,6 +662,7 @@ function renderRecentlyViewed() {
       const saved = storage.has('watchlist', item.id);
       const btn = card.querySelector('.recent-wl-btn');
       btn.classList.toggle('saved', saved);
+      btn.style.background = saved ? 'var(--accent-dim)' : 'var(--glass)';
       btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
     });
     
@@ -669,6 +674,7 @@ function renderRecentlyViewed() {
       const added = storage.has('watchlater', item.id);
       const btn = card.querySelector('.recent-wlat-btn');
       btn.classList.toggle('saved', added);
+      btn.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
       btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
     });
     
@@ -678,7 +684,7 @@ function renderRecentlyViewed() {
       window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
     });
     
-    // Click on card also plays trailer
+    // Click on card also plays trailer (but not on buttons)
     card.addEventListener('click', (e) => {
       if (e.target === trailerBtn || trailerBtn.contains(e.target)) return;
       if (e.target.classList?.contains('recent-wl-btn') || e.target.classList?.contains('recent-wlat-btn') || e.target.classList?.contains('recent-detail-btn')) return;
@@ -813,7 +819,7 @@ async function loadTrending() {
               <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
               ${inWLat ? 'Later' : 'Later'}
             </button>
-            <button class="trending-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+           <button class="trending-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-size: 10px; font-weight: 600; color: white;">
               <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
               Info
             </button>
@@ -1085,11 +1091,6 @@ async function loadSimilar(id, type) {
 
     const section = $('similar-section');
     const grid = $('similar-grid');
-    if (!section || !grid) return;
-
-    section.style.display = 'block';
-    items.forEach((item, idx) => buildCard(item, idx, grid, type));
-
     section.querySelectorAll('[data-reveal]').forEach(el => revealObs.observe(el));
   } catch {}
 }

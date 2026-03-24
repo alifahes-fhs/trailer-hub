@@ -480,25 +480,28 @@ function buildCard(item, idx, container, type) {
       ${score ? `<div class="card-rating">${score}</div>` : ''}
       <div class="card-overlay">
         <p class="card-overview">${overview.substring(0, 100)}...</p>
-        <button class="watch-trailer-btn">▶ Watch Trailer</button>
+        <button class="watch-trailer-btn">▶ WATCH TRAILER</button>
       </div>
     </div>
     <div class="card-info">
       <div class="card-title">${title}${year ? ` <span style="color:var(--faint);font-weight:300">(${year})</span>` : ''}</div>
       <div class="star-rating">${stars}<span class="star-label">${userRating ? `${userRating}/5` : 'Rate'}</span></div>
     </div>
-    <div class="card-actions">
-      <button class="card-action-btn wl-btn ${inWL ? 'saved' : ''}">
+    <div class="card-actions" style="display: flex; gap: 8px; padding: 12px 14px 14px; border-top: 1px solid var(--border); margin-top: 4px;">
+      <button class="card-action-btn wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 11px; font-weight: 500;">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
         ${inWL ? 'Saved' : 'Watchlist'}
       </button>
-      <button class="card-action-btn wlat-btn ${inWLat ? 'saved' : ''}">
+      <button class="card-action-btn wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 11px; font-weight: 500;">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        ${inWLat ? 'Added' : 'Watch Later'}
+        ${inWLat ? 'Later' : 'Watch Later'}
       </button>
-      <button class="card-action-btn detail-btn" style="flex:0.8">Info</button>
+      <button class="card-action-btn detail-btn" style="flex: 0.8; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 11px; font-weight: 500;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Info
+      </button>
     </div>
-    <div class="card-trailer-container" id="trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 8px;"></div>`;
+    <div class="card-trailer-container" id="trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
   const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: type };
 
@@ -526,7 +529,7 @@ function buildCard(item, idx, container, type) {
     updateBadges();
     const added = storage.has('watchlater', item.id);
     e.currentTarget.classList.toggle('saved', added);
-    e.currentTarget.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Added' : 'Watch Later'}`;
+    e.currentTarget.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Watch Later'}`;
   });
 
   // Info button
@@ -592,25 +595,96 @@ function renderRecentlyViewed() {
   row.innerHTML = '';
 
   items.slice(0, 12).forEach((item, idx) => {
+    const title = item.title || item.name || 'Unknown';
+    const year = item.year || '';
+    const mediaType = item._type || 'movie';
+    const inWL = storage.has('watchlist', item.id);
+    const inWLat = storage.has('watchlater', item.id);
+    
     const card = document.createElement('div');
     card.className = 'trending-card';
     card.style.cursor = 'pointer';
+    card.style.background = 'var(--bg2)';
+    card.style.borderRadius = '16px';
+    card.style.overflow = 'hidden';
+    card.style.border = '1px solid var(--border)';
+    card.style.transition = 'transform 0.3s, border-color 0.2s';
+    card.style.minWidth = '180px';
+    card.style.flexShrink = '0';
+    card.style.width = '180px';
     card.style.animationDelay = `${idx * 0.03}s`;
 
     const thumb = item.poster_path
-      ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${item.title}" style="object-fit:cover" loading="lazy">`
-      : `<div class="trending-thumb" style="display:flex;align-items:center;justify-content:center;font-size:28px">🎬</div>`;
+      ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" style="width: 100%; height: 114px; object-fit: cover;" loading="lazy">`
+      : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
 
     card.innerHTML = `
       ${thumb}
-      <div class="trending-info">
-        <div class="trending-title">${item.title || item.name}</div>
-        <div class="trending-sub">${item.year || ''} · ${item._type === 'tv' ? 'TV' : 'Movie'}</div>
-      </div>`;
+      <div style="padding: 10px 12px;">
+        <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
+        <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
+        <button class="watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button class="recent-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            ${inWL ? 'Saved' : 'Watchlist'}
+          </button>
+          <button class="recent-wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            ${inWLat ? 'Later' : 'Later'}
+          </button>
+          <button class="recent-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Info
+          </button>
+        </div>
+      </div>
+      <div class="card-trailer-container" id="recent-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
-    card.addEventListener('click', () => {
-      openTrailerModal(item, item._type || 'movie');
+    const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
+    
+    // Watch Trailer button
+    const trailerBtn = card.querySelector('.watch-trailer-btn');
+    trailerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playTrailerInsideCard(item, mediaType, card);
     });
+    
+    // Watchlist button
+    card.querySelector('.recent-wl-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleList('watchlist', storeItem);
+      updateBadges();
+      const saved = storage.has('watchlist', item.id);
+      const btn = card.querySelector('.recent-wl-btn');
+      btn.classList.toggle('saved', saved);
+      btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
+    });
+    
+    // Watch Later button
+    card.querySelector('.recent-wlat-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleList('watchlater', storeItem);
+      updateBadges();
+      const added = storage.has('watchlater', item.id);
+      const btn = card.querySelector('.recent-wlat-btn');
+      btn.classList.toggle('saved', added);
+      btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
+    });
+    
+    // Info button
+    card.querySelector('.recent-detail-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
+    });
+    
+    // Click on card also plays trailer
+    card.addEventListener('click', (e) => {
+      if (e.target === trailerBtn || trailerBtn.contains(e.target)) return;
+      if (e.target.classList?.contains('recent-wl-btn') || e.target.classList?.contains('recent-wlat-btn') || e.target.classList?.contains('recent-detail-btn')) return;
+      playTrailerInsideCard(item, mediaType, card);
+    });
+    
     row.appendChild(card);
   });
 }
@@ -706,34 +780,88 @@ async function loadTrending() {
       const title = item.title || item.name || 'Unknown';
       const mediaType = item.media_type === 'tv' ? 'tv' : 'movie';
       const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+      const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
+      const inWL = storage.has('watchlist', item.id);
+      const inWLat = storage.has('watchlater', item.id);
+      
       const card = document.createElement('div');
       card.className = 'trending-card';
       card.style.cursor = 'pointer';
+      card.style.background = 'var(--bg2)';
+      card.style.borderRadius = '16px';
+      card.style.overflow = 'hidden';
+      card.style.border = '1px solid var(--border)';
+      card.style.transition = 'transform 0.3s, border-color 0.2s';
+      
       const thumb = item.backdrop_path || item.poster_path
-        ? `<img class="trending-thumb" src="${IMG_300}${item.backdrop_path || item.poster_path}" alt="${title}" loading="lazy">`
-        : `<div class="trending-thumb" style="display:flex;align-items:center;justify-content:center;font-size:28px">🎬</div>`;
+        ? `<img class="trending-thumb" src="${IMG_300}${item.backdrop_path || item.poster_path}" alt="${title}" loading="lazy" style="width: 100%; height: 114px; object-fit: cover;">`
+        : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
       
       card.innerHTML = `
-        <div class="trending-num">${idx + 1}</div>
+        <div class="trending-num" style="position: absolute; top: 6px; left: 12px; font-family: var(--font-d); font-size: 64px; line-height: 1; color: rgba(255,255,255,0.1); pointer-events: none; z-index: 1;">${idx + 1}</div>
         ${thumb}
-        <div class="trending-info">
-          <div class="trending-title">${title}</div>
-          <div class="trending-sub">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
-          <button class="watch-trailer-btn" style="margin-top: 8px; width: 100%; padding: 6px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; cursor: pointer;">▶ Watch Trailer</button>
+        <div style="padding: 10px 12px;">
+          <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
+          <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}${score ? ` · ${score}` : ''}</div>
+          <button class="watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
+          <div style="display: flex; gap: 6px; margin-top: 8px;">
+            <button class="trending-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              ${inWL ? 'Saved' : 'Watchlist'}
+            </button>
+            <button class="trending-wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              ${inWLat ? 'Later' : 'Later'}
+            </button>
+            <button class="trending-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Info
+            </button>
+          </div>
         </div>
-        <div class="card-trailer-container" id="trending-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 8px;"></div>`;
+        <div class="card-trailer-container" id="trending-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
       
-      // Watch Trailer button - plays inside the trending card
+      const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
+      
+      // Watch Trailer button
       const trailerBtn = card.querySelector('.watch-trailer-btn');
       trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         playTrailerInsideCard(item, mediaType, card);
       });
       
-      // Click on card also plays trailer
+      // Watchlist button
+      card.querySelector('.trending-wl-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleList('watchlist', storeItem);
+        updateBadges();
+        const saved = storage.has('watchlist', item.id);
+        const btn = card.querySelector('.trending-wl-btn');
+        btn.classList.toggle('saved', saved);
+        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
+      });
+      
+      // Watch Later button
+      card.querySelector('.trending-wlat-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleList('watchlater', storeItem);
+        updateBadges();
+        const added = storage.has('watchlater', item.id);
+        const btn = card.querySelector('.trending-wlat-btn');
+        btn.classList.toggle('saved', added);
+        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
+      });
+      
+      // Info button
+      card.querySelector('.trending-detail-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
+      });
+      
+      // Click on card also plays trailer (but not on buttons)
       card.addEventListener('click', (e) => {
-        // Don't trigger if clicking the button (already handled)
         if (e.target === trailerBtn || trailerBtn.contains(e.target)) return;
+        if (e.target.classList?.contains('trending-wl-btn') || e.target.classList?.contains('trending-wlat-btn') || e.target.classList?.contains('trending-detail-btn')) return;
         playTrailerInsideCard(item, mediaType, card);
       });
       
@@ -746,7 +874,6 @@ async function loadTrending() {
     row.innerHTML = '<p style="color:var(--faint);font-size:13px;padding:20px 0">Could not load trending titles.</p>';
   }
 }
-
 
 //helper func 
 // Add this function after your other functions

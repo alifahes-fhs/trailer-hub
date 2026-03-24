@@ -968,18 +968,31 @@ async function playTrailerInsideCard(item, type, card) {
       
       // Create iframe element directly
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
-      iframe.allowFullscreen = true;
-      iframe.style.position = "absolute";
-      iframe.style.top = "0";
-      iframe.style.left = "0";
-      iframe.style.width = "100%";
-      iframe.style.height = "100%";
-      iframe.style.border = "none";
-      iframe.style.borderRadius = "12px";
-      
-      trailerContainer.appendChild(iframe);
+
+iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&mute=1&playsinline=1`;
+
+iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+iframe.allowFullscreen = true;
+
+// 🔥 FORCE VISIBILITY
+iframe.style.position = "absolute";
+iframe.style.top = "0";
+iframe.style.left = "0";
+iframe.style.width = "100%";
+iframe.style.height = "100%";
+iframe.style.border = "none";
+iframe.style.zIndex = "999";
+
+// 🔥 IMPORTANT FIX
+trailerContainer.style.display = "block";
+trailerContainer.style.position = "relative";
+trailerContainer.style.paddingBottom = "56.25%";
+trailerContainer.style.height = "0";
+trailerContainer.style.overflow = "hidden";
+trailerContainer.style.minHeight = "200px"; // 👈 CRITICAL
+
+trailerContainer.innerHTML = '';
+trailerContainer.appendChild(iframe);
       
     } else {
       console.log('No trailer found');

@@ -591,15 +591,12 @@ function renderRecentlyViewed() {
       ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" style="width: 100%; height: 114px; object-fit: cover;" loading="lazy">`
       : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
 
-    // Create a unique ID for the trailer container
-    const trailerId = `recent-trailer-${item.id}-${Date.now()}`;
-    
     card.innerHTML = `
       ${thumb}
       <div style="padding: 10px 12px;">
         <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
         <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
-        <button class="recent-watch-trailer-btn" data-trailer-id="${trailerId}" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
+        <button class="recent-watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
         <div style="display: flex; gap: 6px; margin-top: 8px;">
           <button class="recent-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -615,12 +612,12 @@ function renderRecentlyViewed() {
           </button>
         </div>
       </div>
-      <div id="${trailerId}" class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
+      <div class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
     
-    // Get the trailer container by its unique ID
-    const trailerContainer = document.getElementById(trailerId);
+    // Get the trailer container within the card (class-based fallback)
+    const trailerContainer = card.querySelector('.card-trailer-container');
     
     // Trailer button handler
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
@@ -688,6 +685,12 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   console.log('playTrailerInContainer called for:', item.title || item.name);
   console.log('Trailer container:', trailerContainer);
   
+  // Fallback: if container not passed, find it in card via class selector.
+  if (!trailerContainer && card && card.querySelector) {
+    trailerContainer = card.querySelector('.card-trailer-container');
+    console.log('Fallback retrieved trailer container from card:', trailerContainer);
+  }
+
   if (!trailerContainer) {
     console.error('No trailer container provided');
     return;

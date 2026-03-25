@@ -1,5 +1,5 @@
 /* ============================================================
-   TRAILER HUB — script.js
+   TRAILER HUB — script.js (FIXED VERSION)
    ============================================================ */
 
 const API_KEY  = 'afecc8075597c531e9aae083331172c6';
@@ -57,7 +57,7 @@ function applyTheme(theme) {
   document.body.classList.toggle('light', theme === 'light');
   localStorage.setItem('theme', theme);
   const icon = document.querySelector('.theme-icon');
-  if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀';
+  if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
 }
 
 document.querySelectorAll('#theme-toggle').forEach(btn => {
@@ -313,7 +313,6 @@ $('year-select')?.addEventListener('change', e => { activeYear = e.target.value;
 ================================================================ */
 let currentItem = null;
 
-// REPLACE the entire openTrailerModal function with this:
 async function openTrailerModal(item, type, anchorEl) {
   // Find the trailer container inside the card
   let trailerContainer = null;
@@ -415,38 +414,6 @@ async function openTrailerModal(item, type, anchorEl) {
     }
   }
 }
-
-
-
-function renderInlineActions() {
-  const el = document.getElementById('inline-player-actions');
-  if (!el || !currentItem) return;
-  const item = currentItem;
-  const inWL   = storage.has('watchlist',  item.id);
-  const inWLat = storage.has('watchlater', item.id);
-  const store  = { id: item.id, title: item.title||item.name, year: (item.release_date||item.first_air_date||'').slice(0,4), poster_path: item.poster_path||'', _type: item._type };
-  el.innerHTML = `
-    <button class="modal-action ${inWL?'saved':''}" id="ipl-wl">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      ${inWL ? 'Saved' : '+ Watchlist'}
-    </button>
-    <button class="modal-action ${inWLat?'saved':''}" id="ipl-wlat">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      ${inWLat ? 'Added' : '+ Watch Later'}
-    </button>
-    <button class="modal-action" id="ipl-detail">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Full Details
-    </button>`;
-  document.getElementById('ipl-wl').onclick    = () => { toggleList('watchlist',  store); updateBadges(); renderInlineActions(); };
-  document.getElementById('ipl-wlat').onclick  = () => { toggleList('watchlater', store); updateBadges(); renderInlineActions(); };
-  document.getElementById('ipl-detail').onclick = () => { closeInlinePlayer(); window.location.href = `movie.html?id=${item.id}&type=${item._type||'movie'}`; };
-}
-
-document.addEventListener('click', e => {
-  if (e.target.id === 'inline-player-close') closeInlinePlayer();
-});
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInlinePlayer(); });
 
 /* ================================================================
    BUILD MOVIE CARD
@@ -574,7 +541,7 @@ function saveUserRating(id, val) {
 }
 
 /* ================================================================
-   RECENTLY VIEWED
+   RECENTLY VIEWED - FIXED VERSION
 ================================================================ */
 function addRecentlyViewed(item) {
   const list = storage.get('recently');
@@ -647,16 +614,16 @@ function renderRecentlyViewed() {
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
     
+    // Trailer button - FIXED: Direct play, no fetchFullAndPlay
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
-    
     if (trailerBtn) {
-      trailerBtn.addEventListener('click', async (e) => {
+      trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        // directly play inside card - no need for fetchFullAndPlay
-        playTrailerInsideCard(item, mediaType, card);
+        playTrailerInsideCard(item, mediaType, card); // Direct call
       });
     }
     
+    // Watchlist button
     const wlBtn = card.querySelector('.recent-wl-btn');
     if (wlBtn) {
       wlBtn.addEventListener('click', (e) => {
@@ -670,6 +637,7 @@ function renderRecentlyViewed() {
       });
     }
     
+    // Watch Later button
     const wlatBtn = card.querySelector('.recent-wlat-btn');
     if (wlatBtn) {
       wlatBtn.addEventListener('click', (e) => {
@@ -683,6 +651,7 @@ function renderRecentlyViewed() {
       });
     }
     
+    // Info button
     const detailBtn = card.querySelector('.recent-detail-btn');
     if (detailBtn) {
       detailBtn.addEventListener('click', (e) => {
@@ -691,10 +660,11 @@ function renderRecentlyViewed() {
       });
     }
     
+    // Card click - FIXED: Direct play, no fetchFullAndPlay
     card.addEventListener('click', (e) => {
       if (e.target.tagName === 'BUTTON') return;
       if (e.target.closest('button')) return;
-      fetchFullAndPlay(item, mediaType, card); // ✅ FIXED
+      playTrailerInsideCard(item, mediaType, card); // Direct call, no fetch
     });
     
     row.appendChild(card);
@@ -842,9 +812,6 @@ async function loadTrending() {
         playTrailerInsideCard(item, mediaType, card);
       });
       
-
-
-
       // Watchlist button
       card.querySelector('.trending-wl-btn').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -890,8 +857,7 @@ async function loadTrending() {
   }
 }
 
-//helper func 
-// Add this function after your other functions
+// MAIN TRAILER FUNCTION - FIXED
 async function playTrailerInsideCard(item, type, card) {
   console.log('playTrailerInsideCard called for:', item.title || item.name);
   
@@ -965,48 +931,25 @@ async function playTrailerInsideCard(item, type, card) {
       
       // Clear the container and add the iframe
       trailerContainer.innerHTML = '';
+      trailerContainer.style.position = 'relative';
+      trailerContainer.style.paddingBottom = '56.25%';
+      trailerContainer.style.height = '0';
       
       // Create iframe element directly
       const iframe = document.createElement('iframe');
-
-iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1`;
-
-iframe.allow = "autoplay; encrypted-media; picture-in-picture";
-iframe.allowFullscreen = true;
-
-// 🔥 FORCE VISIBILITY
-iframe.style.position = "absolute";
-iframe.style.top = "0";
-iframe.style.left = "0";
-iframe.style.width = "100%";
-iframe.style.height = "100%";
-iframe.style.border = "none";
-iframe.style.zIndex = "1";
-
-// 🔥 IMPORTANT FIX
-trailerContainer.style.display = "block";
-trailerContainer.style.position = "relative";
-trailerContainer.style.paddingBottom = "0";
-trailerContainer.style.height = "220px";
-trailerContainer.style.overflow = "hidden";
-trailerContainer.style.borderRadius = "12px";
-trailerContainer.style.margin = "0 8px 8px 8px";
-
-trailerContainer.innerHTML = '';
-trailerContainer.appendChild(iframe);
-
-// Add fullscreen button
-const fsBtn = document.createElement('button');
-fsBtn.innerHTML = '⛶';
-fsBtn.title = 'Fullscreen';
-fsBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:6px;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.2s;';
-fsBtn.onmouseenter = () => fsBtn.style.background = 'rgba(108,99,255,0.8)';
-fsBtn.onmouseleave = () => fsBtn.style.background = 'rgba(0,0,0,0.6)';
-fsBtn.onclick = () => {
-  if (iframe.requestFullscreen) iframe.requestFullscreen();
-  else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-};
-trailerContainer.appendChild(fsBtn);
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.allowFullscreen = true;
+      iframe.style.position = "absolute";
+      iframe.style.top = "0";
+      iframe.style.left = "0";
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.style.borderRadius = "12px";
+      iframe.style.zIndex = "1";
+      
+      trailerContainer.appendChild(iframe);
       
     } else {
       console.log('No trailer found');
@@ -1021,27 +964,18 @@ trailerContainer.appendChild(fsBtn);
   } catch (error) {
     console.error('Error loading trailer:', error);
     trailerContainer.innerHTML = `
-      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted);">
-        Error loading trailer
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); flex-direction: column; gap: 8px;">
+        <div style="font-size: 32px;">⚠️</div>
+        <p style="font-size: 12px;">Error loading trailer</p>
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="padding: 4px 12px; background: var(--accent); border: none; border-radius: 20px; color: white; font-size: 10px; cursor: pointer;">Close</button>
       </div>
     `;
   }
 }
 
+// Remove fetchFullAndPlay function as it's not needed
+// async function fetchFullAndPlay(item, type, card) { ... } // DELETE THIS FUNCTION
 
-
-
-
-async function fetchFullAndPlay(item, type, card) {
-  try {
-    const res = await fetch(`${BASE_URL}/${type}/${item.id}?api_key=${API_KEY}`);
-    const fullItem = await res.json();
-
-    playTrailerInsideCard(fullItem, type, card);
-  } catch (err) {
-    console.error("Error fetching full item:", err);
-  }
-}
 /* ================================================================
    MOVIE DETAIL PAGE
 ================================================================ */
@@ -1172,6 +1106,23 @@ async function loadSimilar(id, type) {
 
     const section = $('similar-section');
     const grid = $('similar-grid');
+    if (section && grid && items.length) {
+      section.style.display = 'block';
+      grid.innerHTML = '';
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'similar-card';
+        card.innerHTML = `
+          <img src="${IMG_300}${item.poster_path}" alt="${item.title || item.name}">
+          <div class="similar-title">${item.title || item.name}</div>
+          <div class="similar-year">${(item.release_date || item.first_air_date || '').slice(0, 4)}</div>
+        `;
+        card.addEventListener('click', () => {
+          window.location.href = `movie.html?id=${item.id}&type=${item.media_type || type}`;
+        });
+        grid.appendChild(card);
+      });
+    }
     section.querySelectorAll('[data-reveal]').forEach(el => revealObs.observe(el));
   } catch {}
 }
@@ -1205,7 +1156,7 @@ loadMovieDetail();
 
 // Add shake animation style
 const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `@keyframes shakeField{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}`;
+shakeStyle.textContent = `@keyframes shakeField{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}@keyframes spin{to{transform:rotate(360deg)}}`;
 document.head.appendChild(shakeStyle);
 
 // Genre dropdown toggle

@@ -11,6 +11,7 @@ const IMG_ORI  = 'https://image.tmdb.org/t/p/original';
 /* ── State ── */
 let activeGenre  = '';
 let activeRating = '';
+let activeAgeGroup = '';
 let activeYear   = '';
 let activeSort   = 'popularity.desc';
 let lastQuery    = '';
@@ -215,13 +216,22 @@ async function doSearch(reset = false) {
   try {
     const yearParam = activeYear ? `&primary_release_year=${activeYear}` : '';
     const genreParam = activeGenre ? `&with_genres=${activeGenre}` : '';
+    // Age/certification filtering only applies cleanly to Movie discover.
+    const ageCertParam = (() => {
+      if (lastType !== 'movie') return '';
+      if (!activeAgeGroup) return '';
+      if (activeAgeGroup === 'u10') return `&certification_country=US&certification.lte=PG`;
+      if (activeAgeGroup === 'u18') return `&certification_country=US&certification.lte=PG-13`;
+      if (activeAgeGroup === 'a18') return `&certification_country=US&certification.gte=R`;
+      return '';
+    })();
     const certParam = activeRating ? `&certification_country=US&certification=${activeRating}` : '';
     
     let url;
     if (lastQuery) {
       url = `${BASE_URL}/search/${lastType}?api_key=${API_KEY}&query=${encodeURIComponent(lastQuery)}&language=en-US&page=${currentPage}&include_adult=false`;
     } else {
-      url = `${BASE_URL}/discover/${lastType}?api_key=${API_KEY}&language=en-US&sort_by=${activeSort}&page=${currentPage}&include_adult=false${genreParam}${yearParam}${certParam}`;
+      url = `${BASE_URL}/discover/${lastType}?api_key=${API_KEY}&language=en-US&sort_by=${activeSort}&page=${currentPage}&include_adult=false${genreParam}${yearParam}${ageCertParam}${certParam}`;
     }
 
     const res = await fetch(url);
@@ -243,6 +253,11 @@ async function doSearch(reset = false) {
     if (reset) $('results-grid').innerHTML = '';
 
     if (results.length) {
+      // "Top 10" mode: show only the first 10 items.
+      if (reset && window.__top10Only === true) {
+        results = results.slice(0, 10);
+        totalPages = 1;
+      }
       results.forEach((item, idx) => buildCard(item, (currentPage - 1) * 20 + idx, $('results-grid'), lastType));
     } else if (reset) {
       $('results-grid').innerHTML = `<div class="empty-state"><div class="icon">🎞️</div><h3>No results found</h3><p>Try adjusting your filters or search term.</p></div>`;
@@ -499,29 +514,108 @@ function renderRecentlyViewed() {
 /* ================================================================
    GENRE CHIPS (inline near search)
 ================================================================ */
-function initGenreChips() {
-  document.querySelectorAll('.fchip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const genre = btn.dataset.genre ?? '';
-      const label = btn.dataset.label || btn.textContent.replace(/^[^\w]+/, '').trim();
+// (removed) old inline chip handler
 
-      // UI active state
-      document.querySelectorAll('.fchip').forEach(b => b.classList.toggle('active', b === btn));
+/* ================================================================
+   FILTER DROPDOWNS (Genre / Age / Top 10)
+================================================================ */
+function initFilterDropdowns() {
+  const closeAllMenus = () => {
+    document.querySelectorAll('.filter-dd.open').forEach(dd => dd.classList.remove('open'));
+  };
 
-      // Apply filter + run discover immediately (no query needed)
-      activeGenre = genre;
+  document.addEventListener('click', (e) => {
+    const inside = e.target.closest?.('.filter-dd');
+    if (!inside) closeAllMenus();
+  });
+
+  const genreDd = $('genre-dd');
+  const genreBtn = $('genre-btn');
+  const genreMenu = $('genre-menu');
+  if (genreDd && genreBtn && genreMenu) {
+    genreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = genreDd.classList.contains('open');
+      closeAllMenus();
+      genreDd.classList.toggle('open', !isOpen);
+    });
+    genreMenu.querySelectorAll('.filter-item').forEach(item => {
+      item.addEventListener('click', () => {
+        genreMenu.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
+        item.classList.add('active');
+        activeGenre = item.dataset.genre ?? '';
+        window.__top10Only = false;
+        $('top10-btn')?.classList.remove('active');
+
+        const label = item.dataset.label || 'Discover';
+        lastQuery = '';
+        currentPage = 1;
+        lastType = $('search-type')?.value || lastType || 'movie';
+        if ($('movie-search')) $('movie-search').value = '';
+
+        if ($('results-heading')) $('results-heading').textContent = label;
+        if ($('results-eyebrow')) $('results-eyebrow').textContent = activeGenre ? 'Genre Results' : 'Discover';
+        pushState('', '');
+        doSearch(true);
+        closeAllMenus();
+      });
+    });
+  }
+
+  const ageDd = $('age-dd');
+  const ageBtn = $('age-btn');
+  const ageMenu = $('age-menu');
+  if (ageDd && ageBtn && ageMenu) {
+    ageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = ageDd.classList.contains('open');
+      closeAllMenus();
+      ageDd.classList.toggle('open', !isOpen);
+    });
+    ageMenu.querySelectorAll('.filter-item').forEach(item => {
+      item.addEventListener('click', () => {
+        ageMenu.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
+        item.classList.add('active');
+        activeAgeGroup = item.dataset.age ?? '';
+        window.__top10Only = false;
+        $('top10-btn')?.classList.remove('active');
+
+        const label = item.dataset.label || 'Discover';
+        lastQuery = '';
+        currentPage = 1;
+        lastType = $('search-type')?.value || lastType || 'movie';
+        if ($('movie-search')) $('movie-search').value = '';
+
+        if ($('results-heading')) $('results-heading').textContent = label;
+        if ($('results-eyebrow')) $('results-eyebrow').textContent = activeAgeGroup ? 'Age Filter' : 'Discover';
+        pushState('', '');
+        doSearch(true);
+        closeAllMenus();
+      });
+    });
+  }
+
+  const top10Btn = $('top10-btn');
+  if (top10Btn) {
+    top10Btn.addEventListener('click', () => {
+      const next = !(window.__top10Only === true);
+      window.__top10Only = next;
+      top10Btn.classList.toggle('active', next);
+
       lastQuery = '';
       currentPage = 1;
       lastType = $('search-type')?.value || lastType || 'movie';
       if ($('movie-search')) $('movie-search').value = '';
 
-      if ($('results-heading')) $('results-heading').textContent = label || 'Discover';
-      if ($('results-eyebrow')) $('results-eyebrow').textContent = genre ? 'Genre Results' : 'Discover';
+      if ($('results-heading')) $('results-heading').textContent = next ? 'Top 10' : 'Discover';
+      if ($('results-eyebrow')) $('results-eyebrow').textContent = next ? 'Most Viewed (Popularity)' : 'Discover';
 
+      // Ensure popular sort for "most viewed" feeling.
+      activeSort = 'popularity.desc';
       pushState('', '');
       doSearch(true);
     });
-  });
+  }
 }
 
 $('clear-recent')?.addEventListener('click', () => {
@@ -1074,7 +1168,7 @@ renderRecentlyViewed();
 loadTrending();
 readURLState();
 loadMovieDetail();
-initGenreChips();
+initFilterDropdowns();
 
 // Add shake animation style
 const shakeStyle = document.createElement('style');

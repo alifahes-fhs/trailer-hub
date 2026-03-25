@@ -40,20 +40,37 @@
       <div class="search-outer">
         <div class="search-wrapper-ac">
           <div class="search-box">
-            <div id="genre-chips-inline" class="genre-buttons" aria-label="Genre filters">
-              <button class="fchip active" data-genre="" data-label="Discover">🎬 All</button>
-              <button class="fchip" data-genre="28" data-label="Action">💥 Action</button>
-              <button class="fchip" data-genre="35" data-label="Comedy">😂 Comedy</button>
-              <button class="fchip" data-genre="18" data-label="Drama">🎭 Drama</button>
-              <button class="fchip" data-genre="27" data-label="Horror">👻 Horror</button>
-              <button class="fchip" data-genre="878" data-label="Sci‑Fi">🚀 Sci‑Fi</button>
-              <button class="fchip" data-genre="10749" data-label="Romance">💕 Romance</button>
-              <button class="fchip" data-genre="16" data-label="Animation">✏️ Animation</button>
-              <button class="fchip" data-genre="53" data-label="Thriller">🔪 Thriller</button>
-              <button class="fchip" data-genre="99" data-label="Documentary">🎥 Documentary</button>
-              <button class="fchip" data-genre="14" data-label="Fantasy">🧙 Fantasy</button>
-              <button class="fchip" data-genre="80" data-label="Crime">🕵️ Crime</button>
-              <button class="fchip" data-genre="10751" data-label="Family">👨‍👩‍👧 Family</button>
+            <div class="search-filters">
+              <div class="filter-dd" id="genre-dd">
+                <button class="filter-btn" id="genre-btn" type="button">Genre <span class="caret">▾</span></button>
+                <div class="filter-menu" id="genre-menu" role="menu" aria-label="Pick a genre">
+                  <button class="filter-item active" type="button" data-genre="" data-label="Discover">🎬 Any</button>
+                  <button class="filter-item" type="button" data-genre="28" data-label="Action">💥 Action</button>
+                  <button class="filter-item" type="button" data-genre="35" data-label="Comedy">😂 Comedy</button>
+                  <button class="filter-item" type="button" data-genre="18" data-label="Drama">🎭 Drama</button>
+                  <button class="filter-item" type="button" data-genre="27" data-label="Horror">👻 Horror</button>
+                  <button class="filter-item" type="button" data-genre="878" data-label="Sci‑Fi">🚀 Sci‑Fi</button>
+                  <button class="filter-item" type="button" data-genre="10749" data-label="Romance">💕 Romance</button>
+                  <button class="filter-item" type="button" data-genre="16" data-label="Animation">✏️ Animation</button>
+                  <button class="filter-item" type="button" data-genre="53" data-label="Thriller">🔪 Thriller</button>
+                  <button class="filter-item" type="button" data-genre="99" data-label="Documentary">🎥 Documentary</button>
+                  <button class="filter-item" type="button" data-genre="14" data-label="Fantasy">🧙 Fantasy</button>
+                  <button class="filter-item" type="button" data-genre="80" data-label="Crime">🕵️ Crime</button>
+                  <button class="filter-item" type="button" data-genre="10751" data-label="Family">👨‍👩‍👧 Family</button>
+                </div>
+              </div>
+
+              <div class="filter-dd" id="age-dd">
+                <button class="filter-btn" id="age-btn" type="button">Age <span class="caret">▾</span></button>
+                <div class="filter-menu" id="age-menu" role="menu" aria-label="Pick an age filter">
+                  <button class="filter-item active" type="button" data-age="" data-label="Any Age">🧒 Any</button>
+                  <button class="filter-item" type="button" data-age="u10" data-label="Under 10">Under 10</button>
+                  <button class="filter-item" type="button" data-age="u18" data-label="Under 18">Under 18</button>
+                  <button class="filter-item" type="button" data-age="a18" data-label="18+">18+</button>
+                </div>
+              </div>
+
+              <button class="filter-btn filter-primary" id="top10-btn" type="button">Top 10</button>
             </div>
             <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
             <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>

@@ -773,8 +773,8 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       
       // Create iframe
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0&controls=1&playsinline=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
       iframe.allowFullscreen = true;
       iframe.style.position = "absolute";
       iframe.style.top = "0";
@@ -785,6 +785,11 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       iframe.style.borderRadius = "12px";
       
       trailerContainer.appendChild(iframe);
+
+      const stateNote = document.createElement('div');
+      stateNote.textContent = 'Video loaded; playing muted to satisfy autoplay policy.';
+      stateNote.style.cssText = 'position:absolute;bottom:7px;left:7px;padding:3px 6px;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;border-radius:6px;z-index:1001;pointer-events:none;';
+      trailerContainer.appendChild(stateNote);
       
       // Add close button
       const closeBtn = document.createElement('button');
@@ -1144,8 +1149,8 @@ async function playTrailerInsideCard(item, type, card) {
       
       // Create iframe
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0&controls=1&playsinline=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
       iframe.allowFullscreen = true;
       iframe.style.position = "absolute";
       iframe.style.top = "0";
@@ -1156,6 +1161,11 @@ async function playTrailerInsideCard(item, type, card) {
       iframe.style.borderRadius = "12px";
       
       trailerContainer.appendChild(iframe);
+
+      const stateNote = document.createElement('div');
+      stateNote.textContent = 'Video loaded; playing muted to satisfy autoplay policy.';
+      stateNote.style.cssText = 'position:absolute;bottom:7px;left:7px;padding:3px 6px;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;border-radius:6px;z-index:1001;pointer-events:none;';
+      trailerContainer.appendChild(stateNote);
       
       // Add close button for better UX
       const closeBtn = document.createElement('button');

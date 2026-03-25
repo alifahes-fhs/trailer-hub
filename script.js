@@ -756,6 +756,7 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   console.log('Item:', item.title || item.name);
   console.log('Trailer container:', trailerContainer);
   console.log('Container ID:', trailerContainer?.id);
+  console.log('Container current display:', trailerContainer?.style.display);
   
   if (!trailerContainer) {
     console.error('No trailer container provided');
@@ -789,8 +790,9 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   trailerContainer.style.paddingBottom = '56.25%';
   trailerContainer.style.height = '0';
   trailerContainer.style.overflow = 'hidden';
+  trailerContainer.style.backgroundColor = '#000';
   trailerContainer.innerHTML = `
-    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px;">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px; z-index: 100;">
       <div style="width: 40px; height: 40px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
       <div style="font-size: 12px;">Loading trailer...</div>
     </div>
@@ -820,14 +822,19 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
     
     if (clip) {
       console.log('Playing trailer:', clip.key);
+      console.log('Trailer URL:', `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`);
       
       // Clear container
       trailerContainer.innerHTML = '';
+      trailerContainer.style.position = 'relative';
+      trailerContainer.style.paddingBottom = '56.25%';
+      trailerContainer.style.height = '0';
+      trailerContainer.style.overflow = 'hidden';
       
       // Create iframe
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
       iframe.allowFullscreen = true;
       iframe.style.position = "absolute";
       iframe.style.top = "0";
@@ -836,13 +843,20 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       iframe.style.height = "100%";
       iframe.style.border = "none";
       iframe.style.borderRadius = "12px";
+      iframe.style.zIndex = "10";
       
       trailerContainer.appendChild(iframe);
+      
+      console.log('Iframe created and appended');
+      console.log('Iframe src:', iframe.src);
+      console.log('Trailer container innerHTML length:', trailerContainer.innerHTML.length);
       
       // Add close button
       const closeBtn = document.createElement('button');
       closeBtn.innerHTML = '✕';
-      closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+      closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.8);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:all 0.2s;';
+      closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(108,99,255,0.9)';
+      closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(0,0,0,0.8)';
       closeBtn.onclick = (e) => {
         e.stopPropagation();
         console.log('Close button clicked');
@@ -851,7 +865,10 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       };
       trailerContainer.appendChild(closeBtn);
       
-      console.log('Trailer loaded successfully');
+      // Force a reflow to ensure the iframe renders
+      trailerContainer.offsetHeight;
+      
+      console.log('Trailer should be playing now');
       
     } else {
       console.log('No trailer found');
@@ -876,6 +893,8 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   
   console.log('=== playTrailerInContainer END ===');
 }
+
+
 
 // Main trailer function for regular cards
 async function playTrailerInsideCard(item, type, card) {

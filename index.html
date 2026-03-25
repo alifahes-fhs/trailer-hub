@@ -28,31 +28,7 @@
     </nav>
   </header>
 
-  <!-- STICKY GENRE BAR -->
-  <div id="sticky-filters" style="position:fixed;top:70px;left:0;right:0;z-index:190;background:#0a0a14;border-bottom:1px solid rgba(255,255,255,0.08);padding:0 40px;">
-    <div id="sticky-filters-inner" style="display:flex;align-items:center;gap:10px;height:52px;">
-      <div id="genre-chips" style="display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;padding:4px 0;">
-        <button class="fchip active" data-genre="">🎬 All</button>
-        <button class="fchip" data-genre="28">💥 Action</button>
-        <button class="fchip" data-genre="35">😂 Comedy</button>
-        <button class="fchip" data-genre="18">🎭 Drama</button>
-        <button class="fchip" data-genre="27">👻 Horror</button>
-        <button class="fchip" data-genre="878">🚀 Sci-Fi</button>
-        <button class="fchip" data-genre="10749">💕 Romance</button>
-        <button class="fchip" data-genre="16">✏️ Animation</button>
-        <button class="fchip" data-genre="53">🔪 Thriller</button>
-        <button class="fchip" data-genre="99">🎥 Documentary</button>
-        <button class="fchip" data-genre="14">🧙 Fantasy</button>
-        <button class="fchip" data-genre="80">🕵️ Crime</button>
-        <button class="fchip" data-genre="10751">👨‍👩‍👧 Family</button>
-      </div>
-      <div id="extra-filters" style="display:flex;align-items:center;gap:6px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.07);padding-left:10px;">
-        <select class="fselect" id="rating-select"><option value="">All Ratings</option><option value="G">G</option><option value="PG">PG</option><option value="PG-13">PG-13</option><option value="R">R</option></select>
-        <select class="fselect" id="year-filter"><option value="">Any Year</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2015">2010s</option><option value="2000">2000s</option></select>
-        <select class="fselect" id="sort-filter"><option value="popularity.desc">🔥 Popular</option><option value="vote_average.desc">⭐ Top Rated</option><option value="release_date.desc">🆕 Newest</option></select>
-      </div>
-    </div>
-  </div>
+  <!-- (Removed) Sticky genre bar -->
 
   <section class="hero">
     <div class="hero-bg"></div>
@@ -64,6 +40,21 @@
       <div class="search-outer">
         <div class="search-wrapper-ac">
           <div class="search-box">
+            <div id="genre-chips-inline" class="genre-buttons" aria-label="Genre filters">
+              <button class="fchip active" data-genre="" data-label="Discover">🎬 All</button>
+              <button class="fchip" data-genre="28" data-label="Action">💥 Action</button>
+              <button class="fchip" data-genre="35" data-label="Comedy">😂 Comedy</button>
+              <button class="fchip" data-genre="18" data-label="Drama">🎭 Drama</button>
+              <button class="fchip" data-genre="27" data-label="Horror">👻 Horror</button>
+              <button class="fchip" data-genre="878" data-label="Sci‑Fi">🚀 Sci‑Fi</button>
+              <button class="fchip" data-genre="10749" data-label="Romance">💕 Romance</button>
+              <button class="fchip" data-genre="16" data-label="Animation">✏️ Animation</button>
+              <button class="fchip" data-genre="53" data-label="Thriller">🔪 Thriller</button>
+              <button class="fchip" data-genre="99" data-label="Documentary">🎥 Documentary</button>
+              <button class="fchip" data-genre="14" data-label="Fantasy">🧙 Fantasy</button>
+              <button class="fchip" data-genre="80" data-label="Crime">🕵️ Crime</button>
+              <button class="fchip" data-genre="10751" data-label="Family">👨‍👩‍👧 Family</button>
+            </div>
             <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
             <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>
             <button id="search-btn">Search</button>

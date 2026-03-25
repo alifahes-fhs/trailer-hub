@@ -504,14 +504,14 @@ function renderRecentlyViewed() {
       <div id="${trailerId}" class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
-    const trailerContainer = document.getElementById(trailerId);
+    // Important: query within the card (it's not in the DOM yet)
+    const trailerContainer = card.querySelector(`#${CSS.escape(trailerId)}`);
     
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
     if (trailerBtn && trailerContainer) {
       trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        console.log('Trailer button clicked for:', title);
         playTrailerInContainer(item, mediaType, trailerContainer, card);
       });
     }
@@ -559,6 +559,34 @@ function renderRecentlyViewed() {
     });
     
     row.appendChild(card);
+  });
+}
+
+/* ================================================================
+   GENRE CHIPS (inline near search)
+================================================================ */
+function initGenreChips() {
+  document.querySelectorAll('.fchip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const genre = btn.dataset.genre ?? '';
+      const label = btn.dataset.label || btn.textContent.replace(/^[^\w]+/, '').trim();
+
+      // UI active state
+      document.querySelectorAll('.fchip').forEach(b => b.classList.toggle('active', b === btn));
+
+      // Apply filter + run discover immediately (no query needed)
+      activeGenre = genre;
+      lastQuery = '';
+      currentPage = 1;
+      lastType = $('search-type')?.value || lastType || 'movie';
+      if ($('movie-search')) $('movie-search').value = '';
+
+      if ($('results-heading')) $('results-heading').textContent = label || 'Discover';
+      if ($('results-eyebrow')) $('results-eyebrow').textContent = genre ? 'Genre Results' : 'Discover';
+
+      pushState('', '');
+      doSearch(true);
+    });
   });
 }
 
@@ -1112,6 +1140,7 @@ renderRecentlyViewed();
 loadTrending();
 readURLState();
 loadMovieDetail();
+initGenreChips();
 
 // Add shake animation style
 const shakeStyle = document.createElement('style');

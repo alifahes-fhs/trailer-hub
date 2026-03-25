@@ -1289,3 +1289,41 @@ kbd {
 .gbtn.active {
   background: #6C63FF;
 }
+
+/* Inline genre chips next to search */
+#genre-chips-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 320px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 4px;
+}
+#genre-chips-inline::-webkit-scrollbar { display: none; }
+
+.fchip {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.fchip:hover {
+  background: var(--accent-dim);
+  border-color: rgba(108,99,255,0.35);
+  transform: translateY(-1px);
+}
+.fchip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  #genre-chips-inline { max-width: 100%; }
+}

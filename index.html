@@ -28,11 +28,10 @@
     </nav>
   </header>
 
-  <!-- FILTER BAR - All filters (genre, rating, year, sort) moved to the left of search -->
-  <div id="sticky-filters" class="filter-bar">
-    <div class="filter-container">
-      <!-- Genre chips row -->
-      <div id="genre-chips" class="genre-chips">
+  <!-- STICKY GENRE BAR -->
+  <div id="sticky-filters" style="position:fixed;top:70px;left:0;right:0;z-index:190;background:#0a0a14;border-bottom:1px solid rgba(255,255,255,0.08);padding:0 40px;">
+    <div id="sticky-filters-inner" style="display:flex;align-items:center;gap:10px;height:52px;">
+      <div id="genre-chips" style="display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;padding:4px 0;">
         <button class="fchip active" data-genre="">🎬 All</button>
         <button class="fchip" data-genre="28">💥 Action</button>
         <button class="fchip" data-genre="35">😂 Comedy</button>
@@ -47,20 +46,10 @@
         <button class="fchip" data-genre="80">🕵️ Crime</button>
         <button class="fchip" data-genre="10751">👨‍👩‍👧 Family</button>
       </div>
-      <!-- Additional filters: Rating, Year, Sort -->
-      <div class="extra-filters">
+      <div id="extra-filters" style="display:flex;align-items:center;gap:6px;flex-shrink:0;border-left:1px solid rgba(255,255,255,0.07);padding-left:10px;">
         <select class="fselect" id="rating-select"><option value="">All Ratings</option><option value="G">G</option><option value="PG">PG</option><option value="PG-13">PG-13</option><option value="R">R</option></select>
         <select class="fselect" id="year-filter"><option value="">Any Year</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2015">2010s</option><option value="2000">2000s</option></select>
         <select class="fselect" id="sort-filter"><option value="popularity.desc">🔥 Popular</option><option value="vote_average.desc">⭐ Top Rated</option><option value="release_date.desc">🆕 Newest</option></select>
-      </div>
-      <!-- Search bar on the right -->
-      <div class="search-wrapper-ac">
-        <div class="search-box">
-          <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
-          <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>
-          <button id="search-btn">Search</button>
-        </div>
-        <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
       </div>
     </div>
   </div>
@@ -72,6 +61,16 @@
       <div class="hero-tag"><span class="hero-dot"></span>Your cinematic universe</div>
       <h1 class="hero-title">EVERY<br><span class="hero-title-ghost">TRAILER.</span><br>ONE HUB.</h1>
       <p class="hero-sub">Search millions of movies and TV shows.<br>Watch trailers instantly. Never miss what's next.</p>
+      <div class="search-outer">
+        <div class="search-wrapper-ac">
+          <div class="search-box">
+            <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
+            <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>
+            <button id="search-btn">Search</button>
+          </div>
+          <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+        </div>
+      </div>
     </div>
     <div class="hero-art">
       <div class="art-card"><div class="art-badge">★ 8.8</div><div class="art-face art-face-1">🎬</div><div class="art-info"><div class="art-info-title">Oppenheimer</div><div class="art-info-sub">Drama · 2023</div></div></div>
@@ -110,6 +109,7 @@
   </section>
 
   <div class="divider"></div>
+
   <section class="cta-section" data-reveal>
     <div class="cta-bg"></div>
     <h2 class="cta-title">DISCOVER WHAT'S NEXT</h2>
@@ -123,17 +123,31 @@
     <div class="footer-links"><a href="contact.html">Contact</a><a href="#">Privacy</a></div>
   </footer>
 
+  <!-- ONE inline player — no duplicates -->
   <div id="inline-player-wrap" style="display:none">
     <div id="inline-player-box">
-      <div id="inline-player-header"><div><div id="inline-player-title"></div><div id="inline-player-meta"></div></div><button id="inline-player-close">✕</button></div>
+      <div id="inline-player-header">
+        <div>
+          <div id="inline-player-title"></div>
+          <div id="inline-player-meta"></div>
+        </div>
+        <button id="inline-player-close">✕</button>
+      </div>
       <div id="inline-player-video"></div>
       <div id="inline-player-actions"></div>
     </div>
   </div>
 
+  <!-- Lists Panel -->
   <div class="panel-backdrop" id="list-panel">
     <div class="panel-box">
-      <div class="panel-header"><div class="panel-tabs"><button class="panel-tab active" id="tab-watchlist">Watchlist</button><button class="panel-tab" id="tab-watchlater">Watch Later</button></div><button class="modal-close" id="panel-close">✕</button></div>
+      <div class="panel-header">
+        <div class="panel-tabs">
+          <button class="panel-tab active" id="tab-watchlist">Watchlist</button>
+          <button class="panel-tab" id="tab-watchlater">Watch Later</button>
+        </div>
+        <button class="modal-close" id="panel-close">✕</button>
+      </div>
       <div class="panel-body" id="panel-body"></div>
     </div>
   </div>

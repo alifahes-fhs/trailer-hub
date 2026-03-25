@@ -753,28 +753,17 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer');
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Teaser');
     if (!clip) clip = vids.find(v => v.site === 'YouTube');
-
-    console.log('Best clip selected:', clip ? clip : 'none');
-    if (!clip) {
-      console.warn('No YouTube trailer available; showing no-trailer message');
-      trailerContainer.innerHTML = `
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--muted);flex-direction:column;gap:8px;">
-          <div style="font-size:32px;">🎬</div>
-          <p style="font-size:12px;">No trailer available for this item</p>
-          <p style="font-size:10px;color:var(--faint);">Found ${vids.length} video(s), none were usable</p>
-        </div>`;
-      return;
-    }
-
-    console.log('Playing trailer:', clip.key);
-
-    // Clear container
-    trailerContainer.innerHTML = '';
+    
+    if (clip) {
+      console.log('Playing trailer:', clip.key);
+      
+      // Clear container
+      trailerContainer.innerHTML = '';
       
       // Create iframe
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0&controls=1&playsinline=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
       iframe.allowFullscreen = true;
       iframe.style.position = "absolute";
       iframe.style.top = "0";
@@ -785,11 +774,6 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       iframe.style.borderRadius = "12px";
       
       trailerContainer.appendChild(iframe);
-
-      const stateNote = document.createElement('div');
-      stateNote.textContent = 'Video loaded; playing muted to satisfy autoplay policy.';
-      stateNote.style.cssText = 'position:absolute;bottom:7px;left:7px;padding:3px 6px;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;border-radius:6px;z-index:1001;pointer-events:none;';
-      trailerContainer.appendChild(stateNote);
       
       // Add close button
       const closeBtn = document.createElement('button');
@@ -1125,22 +1109,11 @@ async function playTrailerInsideCard(item, type, card) {
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer');
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Teaser');
     if (!clip) clip = vids.find(v => v.site === 'YouTube');
-
-    console.log('Best clip selected:', clip ? clip : 'none');
-    if (!clip) {
-      console.warn('No YouTube trailer available; showing no-trailer message');
-      trailerContainer.innerHTML = `
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--muted);flex-direction:column;gap:8px;">
-          <div style="font-size:32px;">🎬</div>
-          <p style="font-size:12px;">No trailer available for this item</p>
-          <p style="font-size:10px;color:var(--faint);">Found ${vids.length} video(s), none were usable</p>
-        </div>`;
-      return;
-    }
-
-    console.log('Playing trailer:', clip.key);
-
-    // Clear container and set up for iframe
+    
+    if (clip) {
+      console.log('Playing trailer:', clip.key);
+      
+      // Clear container and set up for iframe
       trailerContainer.innerHTML = '';
       trailerContainer.style.position = 'relative';
       trailerContainer.style.paddingBottom = '56.25%';
@@ -1149,8 +1122,8 @@ async function playTrailerInsideCard(item, type, card) {
       
       // Create iframe
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0&controls=1&playsinline=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
       iframe.allowFullscreen = true;
       iframe.style.position = "absolute";
       iframe.style.top = "0";
@@ -1161,11 +1134,6 @@ async function playTrailerInsideCard(item, type, card) {
       iframe.style.borderRadius = "12px";
       
       trailerContainer.appendChild(iframe);
-
-      const stateNote = document.createElement('div');
-      stateNote.textContent = 'Video loaded; playing muted to satisfy autoplay policy.';
-      stateNote.style.cssText = 'position:absolute;bottom:7px;left:7px;padding:3px 6px;background:rgba(0,0,0,0.6);color:#fff;font-size:10px;border-radius:6px;z-index:1001;pointer-events:none;';
-      trailerContainer.appendChild(stateNote);
       
       // Add close button for better UX
       const closeBtn = document.createElement('button');

@@ -1291,27 +1291,29 @@ kbd {
 }
 
 /* Inline genre chips next to search */
-#genre-chips-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 320px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 2px 4px;
+#genre-chips-inline{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  max-width:320px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding:2px 4px;
+  flex: 0 0 auto;
 }
-#genre-chips-inline::-webkit-scrollbar { display: none; }
+#genre-chips-inline::-webkit-scrollbar{display:none}
 
 .fchip {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.10);
   color: var(--text);
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s, border-color 0.2s;
   white-space: nowrap;
+  line-height: 1;
 }
 .fchip:hover {
   background: var(--accent-dim);
@@ -1326,4 +1328,22 @@ kbd {
 
 @media (max-width: 600px) {
   #genre-chips-inline { max-width: 100%; }
+}
+
+/* Make search row not look messy */
+.search-box{
+  flex-wrap: nowrap;
+}
+@media (max-width: 600px){
+  .search-box{
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    border-radius: 24px;
+    padding: 12px;
+  }
+  #genre-chips-inline{
+    order: 0;
+    max-width: 100%;
+  }
 }

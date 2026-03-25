@@ -363,7 +363,7 @@ function buildCard(item, idx, container, type) {
     </div>
     <div class="card-trailer-container" id="trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
-  const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: type };
+  const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: type, score: item.vote_average || 0 };
 
   const trailerBtn = card.querySelector('.watch-trailer-btn');
   trailerBtn.addEventListener('click', e => {
@@ -456,8 +456,8 @@ function renderRecentlyViewed() {
     const title = item.title || item.name || 'Unknown';
     const year = item.year || '';
     const mediaType = item._type || 'movie';
-    const inWL = storage.has('watchlist', item.id);
-    const inWLat = storage.has('watchlater', item.id);
+    const scoreNum = Number(item.score || 0);
+    const score = scoreNum ? `★ ${scoreNum.toFixed(1)}` : '';
     
     const card = document.createElement('div');
     card.className = 'trending-card';
@@ -477,85 +477,19 @@ function renderRecentlyViewed() {
     const thumb = item.poster_path
       ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" style="width: 100%; height: 114px; object-fit: cover;" loading="lazy">`
       : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
-
-    const trailerId = `recent-trailer-${item.id}-${Date.now()}-${idx}`;
     
     card.innerHTML = `
       ${thumb}
       <div style="padding: 10px 12px;">
-        <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
-        <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
-        <button class="recent-watch-trailer-btn" data-trailer-id="${trailerId}" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
-        <div style="display: flex; gap: 6px; margin-top: 8px;">
-          <button class="recent-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-            ${inWL ? 'Saved' : 'Watchlist'}
-          </button>
-          <button class="recent-wlat-btn ${inWLat ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            ${inWLat ? 'Later' : 'Later'}
-          </button>
-          <button class="recent-detail-btn" style="flex: 0.7; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-size: 10px; font-weight: 600; color: white;">
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Info
-          </button>
+        <div class="trending-title" style="display:none">${title}</div>
+        <div class="trending-sub" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size: 11px; color: var(--faint); margin: 2px 0 0;">
+          <span>${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</span>
+          ${score ? `<span style="font-family:var(--font-m);color:var(--gold);font-size:11px;background:rgba(0,0,0,.45);border:1px solid rgba(245,197,24,.2);padding:3px 8px;border-radius:999px;">${score}</span>` : ''}
         </div>
-      </div>
-      <div id="${trailerId}" class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
+      </div>`;
 
-    const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
-    // Important: query within the card (it's not in the DOM yet)
-    const trailerContainer = card.querySelector(`#${CSS.escape(trailerId)}`);
-    
-    const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
-    if (trailerBtn && trailerContainer) {
-      trailerBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        playTrailerInContainer(item, mediaType, trailerContainer, card);
-      });
-    }
-    
-    const wlBtn = card.querySelector('.recent-wl-btn');
-    if (wlBtn) {
-      wlBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleList('watchlist', storeItem);
-        updateBadges();
-        const saved = storage.has('watchlist', item.id);
-        wlBtn.classList.toggle('saved', saved);
-        wlBtn.style.background = saved ? 'var(--accent-dim)' : 'var(--glass)';
-        wlBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
-      });
-    }
-    
-    const wlatBtn = card.querySelector('.recent-wlat-btn');
-    if (wlatBtn) {
-      wlatBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleList('watchlater', storeItem);
-        updateBadges();
-        const added = storage.has('watchlater', item.id);
-        wlatBtn.classList.toggle('saved', added);
-        wlatBtn.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
-        wlatBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
-      });
-    }
-    
-    const detailBtn = card.querySelector('.recent-detail-btn');
-    if (detailBtn) {
-      detailBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
-      });
-    }
-    
-    card.addEventListener('click', (e) => {
-      if (e.target.tagName === 'BUTTON') return;
-      if (e.target.closest('button')) return;
-      if (trailerContainer) {
-        playTrailerInContainer(item, mediaType, trailerContainer, card);
-      }
+    card.addEventListener('click', () => {
+      window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
     });
     
     row.appendChild(card);
@@ -724,7 +658,7 @@ async function loadTrending() {
         </div>
         <div class="card-trailer-container" id="trending-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
       
-      const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
+      const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType, score: item.vote_average || 0 };
       
       const trailerBtn = card.querySelector('.watch-trailer-btn');
       trailerBtn.addEventListener('click', (e) => {
@@ -1019,7 +953,7 @@ function renderDetail(d, credits, type) {
     return `<div class="cast-card">${photo}<div class="cast-name">${p.name}</div><div class="cast-role">${p.character}</div></div>`;
   }).join('');
 
-  const storeItem = { id: d.id, title, year, poster_path: d.poster_path || '', _type: type };
+  const storeItem = { id: d.id, title, year, poster_path: d.poster_path || '', _type: type, score: d.vote_average || 0 };
 
   $('movie-detail').innerHTML = `
     <div class="detail-backdrop">

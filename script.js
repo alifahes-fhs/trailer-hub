@@ -584,17 +584,22 @@ function renderRecentlyViewed() {
     card.style.flexShrink = '0';
     card.style.width = '180px';
     card.style.animationDelay = `${idx * 0.03}s`;
+    card.setAttribute('data-id', item.id);
+    card.setAttribute('data-type', mediaType);
 
     const thumb = item.poster_path
       ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" style="width: 100%; height: 114px; object-fit: cover;" loading="lazy">`
       : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
 
+    // Create a unique ID for the trailer container
+    const trailerId = `recent-trailer-${item.id}-${Date.now()}`;
+    
     card.innerHTML = `
       ${thumb}
       <div style="padding: 10px 12px;">
         <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
         <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</div>
-        <button class="recent-watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
+        <button class="recent-watch-trailer-btn" data-trailer-id="${trailerId}" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
         <div style="display: flex; gap: 6px; margin-top: 8px;">
           <button class="recent-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
             <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -610,16 +615,21 @@ function renderRecentlyViewed() {
           </button>
         </div>
       </div>
-      <div class="card-trailer-container" id="recent-trailer-${item.id}" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
+      <div id="${trailerId}" class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
     
-    // Trailer button - FIXED: Direct play, no fetchFullAndPlay
+    // Get the trailer container by its unique ID
+    const trailerContainer = document.getElementById(trailerId);
+    
+    // Trailer button handler
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
-    if (trailerBtn) {
+    if (trailerBtn && trailerContainer) {
       trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        playTrailerInsideCard(item, mediaType, card); // Direct call
+        e.preventDefault();
+        console.log('Trailer button clicked for:', title);
+        playTrailerInContainer(item, mediaType, trailerContainer, card);
       });
     }
     
@@ -660,15 +670,132 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Card click - FIXED: Direct play, no fetchFullAndPlay
+    // Card click handler
     card.addEventListener('click', (e) => {
       if (e.target.tagName === 'BUTTON') return;
       if (e.target.closest('button')) return;
-      playTrailerInsideCard(item, mediaType, card); // Direct call, no fetch
+      if (trailerContainer) {
+        playTrailerInContainer(item, mediaType, trailerContainer, card);
+      }
     });
     
     row.appendChild(card);
   });
+}
+
+// New function specifically for playing trailers in a given container
+async function playTrailerInContainer(item, type, trailerContainer, card) {
+  console.log('playTrailerInContainer called for:', item.title || item.name);
+  console.log('Trailer container:', trailerContainer);
+  
+  if (!trailerContainer) {
+    console.error('No trailer container provided');
+    return;
+  }
+  
+  // If already playing, close it
+  if (trailerContainer.style.display === 'block' && trailerContainer.innerHTML !== '') {
+    trailerContainer.style.display = 'none';
+    trailerContainer.innerHTML = '';
+    console.log('Closed existing trailer');
+    return;
+  }
+  
+  // Close any other open trailers
+  document.querySelectorAll('.card-trailer-container').forEach(c => {
+    if (c !== trailerContainer) {
+      c.style.display = 'none';
+      c.innerHTML = '';
+    }
+  });
+  
+  // Add to recently viewed
+  const title = item.title || item.name || 'Unknown';
+  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+  addRecentlyViewed({ id: item.id, title, year, poster_path: item.poster_path || '', _type: type });
+  
+  // Show loading state
+  trailerContainer.style.display = 'block';
+  trailerContainer.innerHTML = `
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px;">
+      <div style="width: 40px; height: 40px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+      <div style="font-size: 12px;">Loading trailer...</div>
+    </div>
+  `;
+  
+  // Scroll to card
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  
+  try {
+    const videoUrl = type === 'tv'
+      ? `${BASE_URL}/tv/${item.id}/videos?api_key=${API_KEY}`
+      : `${BASE_URL}/movie/${item.id}/videos?api_key=${API_KEY}`;
+    
+    console.log('Fetching from:', videoUrl);
+    const res = await fetch(videoUrl);
+    const data = await res.json();
+    const vids = data.results || [];
+    console.log('Videos found:', vids.length);
+    
+    // Find the best trailer
+    let clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official === true);
+    if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer');
+    if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Teaser');
+    if (!clip) clip = vids.find(v => v.site === 'YouTube');
+    
+    if (clip) {
+      console.log('Playing trailer:', clip.key);
+      
+      // Clear container
+      trailerContainer.innerHTML = '';
+      
+      // Create iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+      iframe.allowFullscreen = true;
+      iframe.style.position = "absolute";
+      iframe.style.top = "0";
+      iframe.style.left = "0";
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.style.borderRadius = "12px";
+      
+      trailerContainer.appendChild(iframe);
+      
+      // Add close button
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '✕';
+      closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        trailerContainer.style.display = 'none';
+        trailerContainer.innerHTML = '';
+      };
+      trailerContainer.appendChild(closeBtn);
+      
+    } else {
+      trailerContainer.innerHTML = `
+        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); flex-direction: column; gap: 8px;">
+          <div style="font-size: 32px;">🎬</div>
+          <p style="font-size: 12px;">No trailer available</p>
+          <button onclick="this.parentElement.parentElement.style.display='none'" style="padding: 4px 12px; background: var(--accent); border: none; border-radius: 20px; color: white; font-size: 10px; cursor: pointer;">Close</button>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('Error loading trailer:', error);
+    trailerContainer.innerHTML = `
+      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg3); color: var(--muted); flex-direction: column; gap: 8px;">
+        <div style="font-size: 32px;">⚠️</div>
+        <p style="font-size: 12px;">Error loading trailer</p>
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="padding: 4px 12px; background: var(--accent); border: none; border-radius: 20px; color: white; font-size: 10px; cursor: pointer;">Close</button>
+      </div>
+    `;
+  }
 }
 
 $('clear-recent')?.addEventListener('click', () => {

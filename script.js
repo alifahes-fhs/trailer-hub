@@ -738,8 +738,14 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
     
     console.log('Fetching from:', videoUrl);
     const res = await fetch(videoUrl);
+    if (!res.ok) {
+      console.error('TMDB video endpoint HTTP error', res.status, res.statusText, 'for', videoUrl);
+      trailerContainer.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--muted);">Trailer API error ${res.status}</div>`;
+      return;
+    }
     const data = await res.json();
     const vids = data.results || [];
+    console.log('TMDB video metadata:', data);
     console.log('Videos found:', vids.length);
     
     // Find the best trailer
@@ -747,12 +753,23 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer');
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Teaser');
     if (!clip) clip = vids.find(v => v.site === 'YouTube');
-    
-    if (clip) {
-      console.log('Playing trailer:', clip.key);
-      
-      // Clear container
-      trailerContainer.innerHTML = '';
+
+    console.log('Best clip selected:', clip ? clip : 'none');
+    if (!clip) {
+      console.warn('No YouTube trailer available; showing no-trailer message');
+      trailerContainer.innerHTML = `
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--muted);flex-direction:column;gap:8px;">
+          <div style="font-size:32px;">🎬</div>
+          <p style="font-size:12px;">No trailer available for this item</p>
+          <p style="font-size:10px;color:var(--faint);">Found ${vids.length} video(s), none were usable</p>
+        </div>`;
+      return;
+    }
+
+    console.log('Playing trailer:', clip.key);
+
+    // Clear container
+    trailerContainer.innerHTML = '';
       
       // Create iframe
       const iframe = document.createElement('iframe');
@@ -1088,8 +1105,14 @@ async function playTrailerInsideCard(item, type, card) {
     
     console.log('Fetching from:', videoUrl);
     const res = await fetch(videoUrl);
+    if (!res.ok) {
+      console.error('TMDB video endpoint HTTP error', res.status, res.statusText, 'for', videoUrl);
+      trailerContainer.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--muted);">Trailer API error ${res.status}</div>`;
+      return;
+    }
     const data = await res.json();
     const vids = data.results || [];
+    console.log('TMDB video metadata:', data);
     console.log('Videos found:', vids.length);
     
     // Find the best trailer
@@ -1097,11 +1120,22 @@ async function playTrailerInsideCard(item, type, card) {
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer');
     if (!clip) clip = vids.find(v => v.site === 'YouTube' && v.type === 'Teaser');
     if (!clip) clip = vids.find(v => v.site === 'YouTube');
-    
-    if (clip) {
-      console.log('Playing trailer:', clip.key);
-      
-      // Clear container and set up for iframe
+
+    console.log('Best clip selected:', clip ? clip : 'none');
+    if (!clip) {
+      console.warn('No YouTube trailer available; showing no-trailer message');
+      trailerContainer.innerHTML = `
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg3);color:var(--muted);flex-direction:column;gap:8px;">
+          <div style="font-size:32px;">🎬</div>
+          <p style="font-size:12px;">No trailer available for this item</p>
+          <p style="font-size:10px;color:var(--faint);">Found ${vids.length} video(s), none were usable</p>
+        </div>`;
+      return;
+    }
+
+    console.log('Playing trailer:', clip.key);
+
+    // Clear container and set up for iframe
       trailerContainer.innerHTML = '';
       trailerContainer.style.position = 'relative';
       trailerContainer.style.paddingBottom = '56.25%';

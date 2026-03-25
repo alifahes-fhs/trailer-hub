@@ -164,7 +164,7 @@ function handleSearch() {
   const q = $('movie-search')?.value.trim();
   
   const searchGenre = activeGenre; // 🔥 use selected button
-  const searchYear = $('year-select')?.value || '';
+  const searchYear = $('year-filter')?.value || '';
   const searchType = $('search-type')?.value || 'movie';
   
   activeGenre = searchGenre;
@@ -305,8 +305,6 @@ function readURLState() {
 $('rating-select')?.addEventListener('change', e => { activeRating = e.target.value; currentPage = 1; doSearch(true); });
 $('year-filter')?.addEventListener('change', e => { activeYear = e.target.value; currentPage = 1; doSearch(true); });
 $('sort-filter')?.addEventListener('change', e => { activeSort = e.target.value; currentPage = 1; doSearch(true); });
-$('genre-select')?.addEventListener('change', e => { activeGenre = e.target.value; });
-$('year-select')?.addEventListener('change', e => { activeYear = e.target.value; });
 
 /* ================================================================
    BUILD MOVIE CARD
@@ -1138,7 +1136,7 @@ if (toggle && dropdown) {
    GENRE BUTTONS (NEW MODERN)
 ================================================================ */
 
-document.querySelectorAll(".gbtn").forEach(btn => {
+document.querySelectorAll(".fchip").forEach(btn => {
   btn.addEventListener("click", () => {
 
     // remove active style

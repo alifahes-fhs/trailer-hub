@@ -479,7 +479,8 @@ function renderRecentlyViewed() {
       ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" style="width: 100%; height: 114px; object-fit: cover;" loading="lazy">`
       : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
 
-    const trailerId = `recent-trailer-${item.id}-${Date.now()}-${idx}`;
+    // Create a UNIQUE ID for the trailer container
+    const trailerId = `recent-trailer-${item.id}-${Date.now()}-${Math.random()}`;
     
     card.innerHTML = `
       ${thumb}
@@ -505,18 +506,23 @@ function renderRecentlyViewed() {
       <div id="${trailerId}" class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
-    const trailerContainer = document.getElementById(trailerId);
     
+    // IMPORTANT: Get the trailer container AFTER it's been added to DOM
+    const trailerContainer = card.querySelector(`#${trailerId}`);
+    
+    // Trailer button handler
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
     if (trailerBtn && trailerContainer) {
       trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        console.log('Trailer button clicked for:', title);
-        playTrailerInContainer(item, mediaType, trailerContainer, card);
+        console.log('🎬 Recent trailer button clicked for:', title);
+        // Use the same function that works for trending
+        playTrailerInsideCard(item, mediaType, card);
       });
     }
     
+    // Watchlist button
     const wlBtn = card.querySelector('.recent-wl-btn');
     if (wlBtn) {
       wlBtn.addEventListener('click', (e) => {
@@ -530,6 +536,7 @@ function renderRecentlyViewed() {
       });
     }
     
+    // Watch Later button
     const wlatBtn = card.querySelector('.recent-wlat-btn');
     if (wlatBtn) {
       wlatBtn.addEventListener('click', (e) => {
@@ -543,6 +550,7 @@ function renderRecentlyViewed() {
       });
     }
     
+    // Info button
     const detailBtn = card.querySelector('.recent-detail-btn');
     if (detailBtn) {
       detailBtn.addEventListener('click', (e) => {
@@ -551,18 +559,18 @@ function renderRecentlyViewed() {
       });
     }
     
+    // Card click - use the SAME function as trending
     card.addEventListener('click', (e) => {
+      // Don't trigger if clicking any button
       if (e.target.tagName === 'BUTTON') return;
       if (e.target.closest('button')) return;
-      if (trailerContainer) {
-        playTrailerInContainer(item, mediaType, trailerContainer, card);
-      }
+      console.log('🖱️ Recent card clicked for:', title);
+      playTrailerInsideCard(item, mediaType, card);
     });
     
     row.appendChild(card);
   });
 }
-
 $('clear-recent')?.addEventListener('click', () => {
   storage.set('recently', []);
   renderRecentlyViewed();
@@ -893,8 +901,6 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   
   console.log('=== playTrailerInContainer END ===');
 }
-
-
 
 // Main trailer function for regular cards
 async function playTrailerInsideCard(item, type, card) {

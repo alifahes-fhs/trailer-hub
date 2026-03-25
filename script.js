@@ -21,7 +21,6 @@ let isLoading    = false;
 let activePanel  = 'watchlist';
 let focusedCardIdx = -1;
 
-
 /* ── DOM shortcut ── */
 const $ = id => document.getElementById(id);
 
@@ -479,8 +478,7 @@ function renderRecentlyViewed() {
       ? `<img class="trending-thumb" src="${IMG_300}${item.poster_path}" alt="${title}" style="width: 100%; height: 114px; object-fit: cover;" loading="lazy">`
       : `<div class="trending-thumb" style="width:100%; height:114px; display:flex; align-items:center; justify-content:center; background: var(--bg3); font-size:28px;">🎬</div>`;
 
-    // Create a UNIQUE ID for the trailer container
-    const trailerId = `recent-trailer-${item.id}-${Date.now()}-${Math.random()}`;
+    const trailerId = `recent-trailer-${item.id}-${Date.now()}-${idx}`;
     
     card.innerHTML = `
       ${thumb}
@@ -506,23 +504,18 @@ function renderRecentlyViewed() {
       <div id="${trailerId}" class="card-trailer-container" style="display: none; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 0 8px 8px 8px;"></div>`;
 
     const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: mediaType };
+    const trailerContainer = document.getElementById(trailerId);
     
-    // IMPORTANT: Get the trailer container AFTER it's been added to DOM
-    const trailerContainer = card.querySelector(`#${trailerId}`);
-    
-    // Trailer button handler
     const trailerBtn = card.querySelector('.recent-watch-trailer-btn');
     if (trailerBtn && trailerContainer) {
       trailerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        console.log('🎬 Recent trailer button clicked for:', title);
-        // Use the same function that works for trending
-        playTrailerInsideCard(item, mediaType, card);
+        console.log('Trailer button clicked for:', title);
+        playTrailerInContainer(item, mediaType, trailerContainer, card);
       });
     }
     
-    // Watchlist button
     const wlBtn = card.querySelector('.recent-wl-btn');
     if (wlBtn) {
       wlBtn.addEventListener('click', (e) => {
@@ -536,7 +529,6 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Watch Later button
     const wlatBtn = card.querySelector('.recent-wlat-btn');
     if (wlatBtn) {
       wlatBtn.addEventListener('click', (e) => {
@@ -550,7 +542,6 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Info button
     const detailBtn = card.querySelector('.recent-detail-btn');
     if (detailBtn) {
       detailBtn.addEventListener('click', (e) => {
@@ -559,18 +550,18 @@ function renderRecentlyViewed() {
       });
     }
     
-    // Card click - use the SAME function as trending
     card.addEventListener('click', (e) => {
-      // Don't trigger if clicking any button
       if (e.target.tagName === 'BUTTON') return;
       if (e.target.closest('button')) return;
-      console.log('🖱️ Recent card clicked for:', title);
-      playTrailerInsideCard(item, mediaType, card);
+      if (trailerContainer) {
+        playTrailerInContainer(item, mediaType, trailerContainer, card);
+      }
     });
     
     row.appendChild(card);
   });
 }
+
 $('clear-recent')?.addEventListener('click', () => {
   storage.set('recently', []);
   renderRecentlyViewed();
@@ -764,7 +755,6 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   console.log('Item:', item.title || item.name);
   console.log('Trailer container:', trailerContainer);
   console.log('Container ID:', trailerContainer?.id);
-  console.log('Container current display:', trailerContainer?.style.display);
   
   if (!trailerContainer) {
     console.error('No trailer container provided');
@@ -798,9 +788,8 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
   trailerContainer.style.paddingBottom = '56.25%';
   trailerContainer.style.height = '0';
   trailerContainer.style.overflow = 'hidden';
-  trailerContainer.style.backgroundColor = '#000';
   trailerContainer.innerHTML = `
-    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px; z-index: 100;">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: white; flex-direction: column; gap: 10px;">
       <div style="width: 40px; height: 40px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
       <div style="font-size: 12px;">Loading trailer...</div>
     </div>
@@ -830,19 +819,14 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
     
     if (clip) {
       console.log('Playing trailer:', clip.key);
-      console.log('Trailer URL:', `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`);
       
       // Clear container
       trailerContainer.innerHTML = '';
-      trailerContainer.style.position = 'relative';
-      trailerContainer.style.paddingBottom = '56.25%';
-      trailerContainer.style.height = '0';
-      trailerContainer.style.overflow = 'hidden';
       
       // Create iframe
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.src = `https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1&showinfo=0&controls=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
       iframe.allowFullscreen = true;
       iframe.style.position = "absolute";
       iframe.style.top = "0";
@@ -851,20 +835,13 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       iframe.style.height = "100%";
       iframe.style.border = "none";
       iframe.style.borderRadius = "12px";
-      iframe.style.zIndex = "10";
       
       trailerContainer.appendChild(iframe);
-      
-      console.log('Iframe created and appended');
-      console.log('Iframe src:', iframe.src);
-      console.log('Trailer container innerHTML length:', trailerContainer.innerHTML.length);
       
       // Add close button
       const closeBtn = document.createElement('button');
       closeBtn.innerHTML = '✕';
-      closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.8);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:all 0.2s;';
-      closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(108,99,255,0.9)';
-      closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(0,0,0,0.8)';
+      closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:1000;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
       closeBtn.onclick = (e) => {
         e.stopPropagation();
         console.log('Close button clicked');
@@ -873,10 +850,7 @@ async function playTrailerInContainer(item, type, trailerContainer, card) {
       };
       trailerContainer.appendChild(closeBtn);
       
-      // Force a reflow to ensure the iframe renders
-      trailerContainer.offsetHeight;
-      
-      console.log('Trailer should be playing now');
+      console.log('Trailer loaded successfully');
       
     } else {
       console.log('No trailer found');

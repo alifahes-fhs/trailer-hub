@@ -12,6 +12,7 @@ const IMG_ORI  = 'https://image.tmdb.org/t/p/original';
 let activeGenre  = '';
 let activeRating = '';
 let activeAgeGroup = '';
+let activeMinScore = '';
 let activeYear   = '';
 let activeSort   = 'popularity.desc';
 let lastQuery    = '';
@@ -220,18 +221,23 @@ async function doSearch(reset = false) {
     const ageCertParam = (() => {
       if (lastType !== 'movie') return '';
       if (!activeAgeGroup) return '';
-      if (activeAgeGroup === 'u10') return `&certification_country=US&certification.lte=PG`;
+      // Approximate mapping to US certs:
+      // 5–9 -> G, 10–12 -> PG, 13–15 -> PG-13, Under 18 -> PG-13, 18+ -> R+
+      if (activeAgeGroup === 'a5_9') return `&certification_country=US&certification.lte=G`;
+      if (activeAgeGroup === 'a10_12') return `&certification_country=US&certification.lte=PG`;
+      if (activeAgeGroup === 'a13_15') return `&certification_country=US&certification.lte=PG-13`;
       if (activeAgeGroup === 'u18') return `&certification_country=US&certification.lte=PG-13`;
       if (activeAgeGroup === 'a18') return `&certification_country=US&certification.gte=R`;
       return '';
     })();
     const certParam = activeRating ? `&certification_country=US&certification=${activeRating}` : '';
+    const scoreParam = activeMinScore ? `&vote_average.gte=${activeMinScore}&vote_count.gte=150` : '';
     
     let url;
     if (lastQuery) {
       url = `${BASE_URL}/search/${lastType}?api_key=${API_KEY}&query=${encodeURIComponent(lastQuery)}&language=en-US&page=${currentPage}&include_adult=false`;
     } else {
-      url = `${BASE_URL}/discover/${lastType}?api_key=${API_KEY}&language=en-US&sort_by=${activeSort}&page=${currentPage}&include_adult=false${genreParam}${yearParam}${ageCertParam}${certParam}`;
+      url = `${BASE_URL}/discover/${lastType}?api_key=${API_KEY}&language=en-US&sort_by=${activeSort}&page=${currentPage}&include_adult=false${genreParam}${yearParam}${ageCertParam}${certParam}${scoreParam}`;
     }
 
     const res = await fetch(url);
@@ -249,15 +255,14 @@ async function doSearch(reset = false) {
         return date.startsWith(activeYear);
       });
     }
+    if (activeMinScore) {
+      const minScore = Number(activeMinScore);
+      results = results.filter(i => Number(i.vote_average || 0) >= minScore);
+    }
     
     if (reset) $('results-grid').innerHTML = '';
 
     if (results.length) {
-      // "Top 10" mode: show only the first 10 items.
-      if (reset && window.__top10Only === true) {
-        results = results.slice(0, 10);
-        totalPages = 1;
-      }
       results.forEach((item, idx) => buildCard(item, (currentPage - 1) * 20 + idx, $('results-grid'), lastType));
     } else if (reset) {
       $('results-grid').innerHTML = `<div class="empty-state"><div class="icon">🎞️</div><h3>No results found</h3><p>Try adjusting your filters or search term.</p></div>`;
@@ -544,9 +549,8 @@ function initFilterDropdowns() {
         genreMenu.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
         item.classList.add('active');
         activeGenre = item.dataset.genre ?? '';
-        window.__top10Only = false;
-        $('top10-btn')?.classList.remove('active');
-
+        const genreLabel = item.dataset.label || 'Any';
+        genreBtn.innerHTML = `${activeGenre ? `Genre: ${genreLabel}` : 'Genre'} <span class="caret">▾</span>`;
         const label = item.dataset.label || 'Discover';
         lastQuery = '';
         currentPage = 1;
@@ -577,9 +581,8 @@ function initFilterDropdowns() {
         ageMenu.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
         item.classList.add('active');
         activeAgeGroup = item.dataset.age ?? '';
-        window.__top10Only = false;
-        $('top10-btn')?.classList.remove('active');
-
+        const ageLabel = item.dataset.label || 'Any Age';
+        ageBtn.innerHTML = `${activeAgeGroup ? `Age: ${ageLabel}` : 'Age'} <span class="caret">▾</span>`;
         const label = item.dataset.label || 'Discover';
         lastQuery = '';
         currentPage = 1;
@@ -595,25 +598,35 @@ function initFilterDropdowns() {
     });
   }
 
-  const top10Btn = $('top10-btn');
-  if (top10Btn) {
-    top10Btn.addEventListener('click', () => {
-      const next = !(window.__top10Only === true);
-      window.__top10Only = next;
-      top10Btn.classList.toggle('active', next);
+  const ratingDd = $('rating-dd');
+  const ratingBtn = $('rating-btn');
+  const ratingMenu = $('rating-menu');
+  if (ratingDd && ratingBtn && ratingMenu) {
+    ratingBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = ratingDd.classList.contains('open');
+      closeAllMenus();
+      ratingDd.classList.toggle('open', !isOpen);
+    });
+    ratingMenu.querySelectorAll('.filter-item').forEach(item => {
+      item.addEventListener('click', () => {
+        ratingMenu.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
+        item.classList.add('active');
+        activeMinScore = item.dataset.score ?? '';
+        const ratingLabel = item.dataset.label || 'Any Rating';
+        ratingBtn.innerHTML = `${activeMinScore ? `Rating: ${ratingLabel}` : 'Rating'} <span class="caret">▾</span>`;
 
-      lastQuery = '';
-      currentPage = 1;
-      lastType = $('search-type')?.value || lastType || 'movie';
-      if ($('movie-search')) $('movie-search').value = '';
+        lastQuery = '';
+        currentPage = 1;
+        lastType = $('search-type')?.value || lastType || 'movie';
+        if ($('movie-search')) $('movie-search').value = '';
 
-      if ($('results-heading')) $('results-heading').textContent = next ? 'Top 10' : 'Discover';
-      if ($('results-eyebrow')) $('results-eyebrow').textContent = next ? 'Most Viewed (Popularity)' : 'Discover';
-
-      // Ensure popular sort for "most viewed" feeling.
-      activeSort = 'popularity.desc';
-      pushState('', '');
-      doSearch(true);
+        if ($('results-heading')) $('results-heading').textContent = ratingLabel;
+        if ($('results-eyebrow')) $('results-eyebrow').textContent = activeMinScore ? 'Rating Filter' : 'Discover';
+        pushState('', '');
+        doSearch(true);
+        closeAllMenus();
+      });
     });
   }
 }

@@ -64,13 +64,25 @@
                 <button class="filter-btn" id="age-btn" type="button">Age <span class="caret">▾</span></button>
                 <div class="filter-menu" id="age-menu" role="menu" aria-label="Pick an age filter">
                   <button class="filter-item active" type="button" data-age="" data-label="Any Age">🧒 Any</button>
-                  <button class="filter-item" type="button" data-age="u10" data-label="Under 10">Under 10</button>
+                  <button class="filter-item" type="button" data-age="a5_9" data-label="Age 5–9">Age 5–9</button>
+                  <button class="filter-item" type="button" data-age="a10_12" data-label="Age 10–12">Age 10–12</button>
+                  <button class="filter-item" type="button" data-age="a13_15" data-label="Age 13–15">Age 13–15</button>
                   <button class="filter-item" type="button" data-age="u18" data-label="Under 18">Under 18</button>
                   <button class="filter-item" type="button" data-age="a18" data-label="18+">18+</button>
                 </div>
               </div>
 
-              <button class="filter-btn filter-primary" id="top10-btn" type="button">Top 10</button>
+              <div class="filter-dd" id="rating-dd">
+                <button class="filter-btn filter-primary" id="rating-btn" type="button">Rating <span class="caret">▾</span></button>
+                <div class="filter-menu" id="rating-menu" role="menu" aria-label="Pick a rating filter">
+                  <button class="filter-item active" type="button" data-score="" data-label="Any Rating">⭐ Any</button>
+                  <button class="filter-item" type="button" data-score="9" data-label="9+ Stars">⭐⭐⭐⭐⭐⭐⭐⭐⭐ 9+</button>
+                  <button class="filter-item" type="button" data-score="8" data-label="8+ Stars">⭐⭐⭐⭐⭐⭐⭐⭐ 8+</button>
+                  <button class="filter-item" type="button" data-score="7" data-label="7+ Stars">⭐⭐⭐⭐⭐⭐⭐ 7+</button>
+                  <button class="filter-item" type="button" data-score="6" data-label="6+ Stars">⭐⭐⭐⭐⭐⭐ 6+</button>
+                  <button class="filter-item" type="button" data-score="5" data-label="5+ Stars">⭐⭐⭐⭐⭐ 5+</button>
+                </div>
+              </div>
             </div>
             <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
             <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>

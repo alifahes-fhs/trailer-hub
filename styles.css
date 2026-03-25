@@ -47,7 +47,7 @@ nav a.active{color:var(--text)}
 .btn-pill:active{transform:translateY(0)}
 
 /* ── HERO ── */
-.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:90px 48px 0;overflow:hidden}
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:90px 48px 0;overflow:visible}
 .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 72% 30%,rgba(108,99,255,.2) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 12% 80%,rgba(255,101,132,.10) 0%,transparent 55%),radial-gradient(ellipse 35% 25% at 48% 8%,rgba(62,186,255,.07) 0%,transparent 50%);animation:bgShift 14s ease-in-out infinite alternate}
 @keyframes bgShift{0%{transform:scale(1) rotate(0deg)}100%{transform:scale(1.07) rotate(1.5deg)}}
 .hero-lines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.022) 3px,rgba(0,0,0,.022) 4px);pointer-events:none}

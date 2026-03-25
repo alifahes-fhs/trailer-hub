@@ -501,7 +501,7 @@ function renderRecentlyViewed() {
     card.innerHTML = `
       ${thumb}
       <div style="padding: 10px 12px;">
-        <div class="trending-title" style="display:none">${title}</div>
+        <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;">${title}</div>
         <div class="trending-sub" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size: 11px; color: var(--faint); margin: 2px 0 0;">
           <span>${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</span>
           ${score ? `<span style="font-family:var(--font-m);color:var(--gold);font-size:11px;background:rgba(0,0,0,.45);border:1px solid rgba(245,197,24,.2);padding:3px 8px;border-radius:999px;">${score}</span>` : ''}

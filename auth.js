@@ -62,7 +62,7 @@
           </button>
   
           <div class="dropdown-menu" id="profile-menu">
-            <a href="login.html" class="dropdown-item">Profile</a>
+            <a href="prfile.html" class="dropdown-item">Profile</a>
             <button class="dropdown-item" id="logout-btn">Logout</button>
           </div>
         </div>

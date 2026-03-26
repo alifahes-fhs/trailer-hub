@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trailer Hub — Profile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header id="site-header">
+    <a href="index.html" class="logo">TRAILER HUB</a>
+    <nav>
+      <a href="index.html">Discover</a>
+      <a href="contact.html">Contact</a>
+      <span id="auth-nav-host"></span>
+    </nav>
+  </header>
+
+  <main style="padding:48px;">
+    <h1>Your Profile</h1>
+    <p id="profile-info"></p>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    // render nav dropdown
+    TrailerAuth.renderNavAuth();
+
+    // show user info
+    const user = TrailerAuth.getUser();
+    const info = document.getElementById('profile-info');
+    if (user) {
+      info.innerHTML = `
+        <strong>Email:</strong> ${user.email} <br>
+        <strong>Provider:</strong> ${user.provider} <br>
+        <strong>Logged in at:</strong> ${new Date(user.at).toLocaleString()}
+      `;
+    } else {
+      info.innerHTML = 'No user info available.';
+    }
+  </script>
+</body>
+</html>

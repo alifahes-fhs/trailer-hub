@@ -1813,3 +1813,84 @@ kbd {
 .logout-btn:hover {
   background-color: #5950f0;
 }
+
+/* ---------------- Theme Variables ---------------- */
+:root {
+  /* General */
+  --bg: #f8f9fa;           /* light background for body */
+  --card-bg: #fff;          /* cards, dropdowns, panels */
+  --text: #111;             /* main text */
+  --text-faint: #555;       /* secondary text */
+  --accent: #6c63ff;        /* primary buttons */
+  --accent-hover: #5950f0;  /* hover color */
+  --border: #ddd;           /* borders / dividers */
+  --shadow: rgba(0,0,0,0.08); /* card shadows */
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* Buttons */
+.btn-pill {
+  background-color: var(--accent);
+  color: white;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-pill:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Cards, sections */
+section, .trending-row, .results-grid, .hero {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.card, .art-card, .panel-box, .dropdown-menu {
+  background-color: var(--card-bg);
+  color: var(--text);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Inputs / filters */
+input, select, .filter-btn {
+  background-color: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+input::placeholder {
+  color: var(--text-faint);
+}
+
+/* Dark mode override */
+body.dark {
+  --bg: #12121b;
+  --card-bg: #1f1f2a;
+  --text: #eee;
+  --text-faint: #aaa;
+  --accent: #6c63ff;
+  --accent-hover: #5950f0;
+  --border: #333;
+  --shadow: rgba(0,0,0,0.5);
+}

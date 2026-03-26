@@ -34,10 +34,7 @@
     const authPages = ['login.html', 'register.html'];
     const appPages = ['index.html', 'movie.html', 'contact.html'];
 
-    if (authPages.includes(page) && (isLoggedIn() || isGuest())) {
-      window.location.href = 'index.html';
-      return;
-    }
+  
     if (appPages.includes(page) && !isLoggedIn() && !isGuest()) {
       window.location.href = 'login.html';
     }
@@ -54,11 +51,43 @@
     }
     if (isLoggedIn()) {
       const u = getUser();
-      host.innerHTML = `<button class="btn-pill" id="logout-btn" type="button">Logout (${(u?.email || 'User').split('@')[0]})</button>`;
+      const name = (u?.email || 'User').split('@')[0];
+    
+      host.innerHTML = `
+        <div class="profile-dropdown">
+          <button class="profile-btn" id="profile-btn">
+            👤 ${name} <span class="caret">▾</span>
+          </button>
+    
+          <div class="dropdown-menu" id="profile-menu">
+            <a href="login.html" class="dropdown-item">Profile</a>
+            <button class="dropdown-item" id="logout-btn">Logout</button>
+          </div>
+        </div>
+      `;
+    
+      const btn = host.querySelector('#profile-btn');
+      const menu = host.querySelector('#profile-menu');
+    
+      // toggle dropdown
+      btn.addEventListener('click', () => {
+        menu.classList.toggle('open');
+      });
+    
+      // close when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!btn.contains(e.target) && !menu.contains(e.target)) {
+          menu.classList.remove('open');
+        }
+      });
+    
+      // logout
       host.querySelector('#logout-btn')?.addEventListener('click', logout);
+    
       return;
     }
-    if (isGuest()) {
+    
+    isGuest()) {
       host.innerHTML = `<a href="login.html" class="btn-pill">Login</a>`;
       return;
     }

@@ -50,51 +50,58 @@
       host.id = 'auth-nav-host';
       nav.appendChild(host);
     }
+  
     if (isLoggedIn()) {
       const u = getUser();
       const name = (u?.email || 'User').split('@')[0];
-    
+      const initials = name.slice(0,2).toUpperCase();
+  
       host.innerHTML = `
         <div class="profile-dropdown">
           <button class="profile-btn" id="profile-btn">
-            👤 ${name} <span class="caret">▾</span>
+            <span class="profile-avatar">${initials}</span>
+            <span class="profile-name">${name}</span>
+            <span class="caret">▾</span>
           </button>
-    
+  
           <div class="dropdown-menu" id="profile-menu">
             <div class="profile-pop">
-              <div class="profile-pop-header">Your Profile</div>
-              <div class="profile-pop-info">
-                <strong>Email:</strong> ${u.email} <br>
-                <strong>Provider:</strong> ${u.provider}
+              <div class="profile-pop-header">
+                <span class="profile-avatar-large">${initials}</span>
+                <div class="profile-pop-info">
+                  <div class="name">${name}</div>
+                  <div class="email">${u.email}</div>
+                  <div class="provider">Provider: ${u.provider}</div>
+                </div>
               </div>
-              <button class="dropdown-item" id="logout-btn">Logout</button>
+              <button class="logout-btn" id="logout-btn">Logout</button>
             </div>
           </div>
         </div>
       `;
-    
+  
       const btn = host.querySelector('#profile-btn');
       const menu = host.querySelector('#profile-menu');
-    
+  
       // toggle dropdown
       btn.addEventListener('click', () => {
         menu.classList.toggle('open');
       });
-    
+  
       // close when clicking outside
       document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !menu.contains(e.target)) {
           menu.classList.remove('open');
         }
       });
-    
+  
       // logout
       host.querySelector('#logout-btn')?.addEventListener('click', logout);
-    
+  
       return;
     }
   
-    // Guest or not logged in
+    // Guest
     host.innerHTML = `<a href="login.html" class="btn-pill">Login</a>`;
   }
   

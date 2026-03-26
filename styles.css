@@ -1691,3 +1691,125 @@ kbd {
   text-align: center;
   margin-top: 8px;
 }
+
+/* ---------------- Modern Profile Dropdown ---------------- */
+.profile-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: var(--accent);
+  color: white;
+  border-radius: 9999px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profile-btn:hover {
+  background-color: #5950f0;
+}
+
+.profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.8em;
+}
+
+.caret {
+  font-size: 0.75em;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  min-width: 250px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: scale(0.95);
+  transform-origin: top right;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.dropdown-menu.open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.profile-pop {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+}
+
+.profile-pop-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 12px;
+}
+
+.profile-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.2em;
+}
+
+.profile-pop-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85em;
+  color: var(--text-faint);
+}
+
+.profile-pop-info .name {
+  font-weight: 600;
+  font-size: 0.95em;
+  color: var(--text);
+}
+
+.logout-btn {
+  margin-top: 12px;
+  background-color: var(--accent);
+  color: white;
+  padding: 8px;
+  border-radius: 9999px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #5950f0;
+}

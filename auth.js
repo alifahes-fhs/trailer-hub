@@ -43,56 +43,56 @@
   function renderNavAuth() {
     const nav = document.querySelector('header nav');
     if (!nav) return;
+  
     let host = document.getElementById('auth-nav-host');
     if (!host) {
       host = document.createElement('span');
       host.id = 'auth-nav-host';
       nav.appendChild(host);
     }
+  
     if (isLoggedIn()) {
       const u = getUser();
       const name = (u?.email || 'User').split('@')[0];
-    
+  
       host.innerHTML = `
         <div class="profile-dropdown">
           <button class="profile-btn" id="profile-btn">
             👤 ${name} <span class="caret">▾</span>
           </button>
-    
+  
           <div class="dropdown-menu" id="profile-menu">
             <a href="login.html" class="dropdown-item">Profile</a>
             <button class="dropdown-item" id="logout-btn">Logout</button>
           </div>
         </div>
       `;
-    
+  
       const btn = host.querySelector('#profile-btn');
       const menu = host.querySelector('#profile-menu');
-    
+  
       // toggle dropdown
       btn.addEventListener('click', () => {
         menu.classList.toggle('open');
       });
-    
+  
       // close when clicking outside
       document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !menu.contains(e.target)) {
           menu.classList.remove('open');
         }
       });
-    
+  
       // logout
       host.querySelector('#logout-btn')?.addEventListener('click', logout);
-    
+  
       return;
     }
-    
-    isGuest()) {
-      host.innerHTML = `<a href="login.html" class="btn-pill">Login</a>`;
-      return;
-    }
+  
+    // Guest or not logged in
     host.innerHTML = `<a href="login.html" class="btn-pill">Login</a>`;
   }
+  
 
   function requirePersonalFeature(message) {
     if (canUsePersonalFeatures()) return true;

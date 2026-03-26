@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Trailer Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="auth-page">
+    <div class="auth-card">
+      <a href="index.html" class="logo">TRAILER HUB</a>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-sub">Login to unlock great features: Tonight Picks, Recently Viewed, and saved favorites/moods.</p>
+
+      <form id="login-form" class="auth-form">
+        <input id="login-email" class="form-input" type="email" placeholder="Email" required>
+        <input id="login-password" class="form-input" type="password" placeholder="Password" required>
+        <button class="submit-btn" type="submit">Login</button>
+      </form>
+
+      <div class="auth-social">
+        <button class="btn-pill auth-social-btn" id="login-google" type="button">Continue with Google</button>
+        <button class="btn-pill auth-social-btn" id="login-apple" type="button">Continue with Apple</button>
+      </div>
+
+      <button class="btn-pill auth-guest-btn" id="browse-guest-login" type="button">Browse as Guest</button>
+      <p class="auth-switch">No account? <a href="register.html">Create one</a></p>
+    </div>
+  </section>
+
+  <script src="auth.js"></script>
+  <script>
+    TrailerAuth.enforceAccess();
+    const form = document.getElementById('login-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pwd = document.getElementById('login-password').value;
+      if (!email || !pwd) return;
+      TrailerAuth.setUser(email, 'email');
+      location.href = 'index.html';
+    });
+    document.getElementById('browse-guest-login').addEventListener('click', () => {
+      TrailerAuth.setGuest();
+      location.href = 'index.html';
+    });
+    document.getElementById('login-google').addEventListener('click', () => {
+      TrailerAuth.setUser('google-user@trailerhub.app', 'google');
+      location.href = 'index.html';
+    });
+    document.getElementById('login-apple').addEventListener('click', () => {
+      TrailerAuth.setUser('apple-user@trailerhub.app', 'apple');
+      location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
+

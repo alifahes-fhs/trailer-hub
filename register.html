@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Trailer Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="auth-page">
+    <div class="auth-card">
+      <a href="index.html" class="logo">TRAILER HUB</a>
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-sub">Login to unlock great features: Tonight Picks, Recently Viewed, and saved favorites/moods.</p>
+
+      <form id="register-form" class="auth-form">
+        <input id="reg-email" class="form-input" type="email" placeholder="Email" required>
+        <input id="reg-password" class="form-input" type="password" placeholder="Password" required minlength="6">
+        <input id="reg-confirm" class="form-input" type="password" placeholder="Confirm Password" required minlength="6">
+        <button class="submit-btn" type="submit">Register</button>
+      </form>
+
+      <button class="btn-pill auth-guest-btn" id="browse-guest-register" type="button">Browse as Guest</button>
+      <p class="auth-switch">Already have an account? <a href="login.html">Login</a></p>
+    </div>
+  </section>
+
+  <script src="auth.js"></script>
+  <script>
+    TrailerAuth.enforceAccess();
+    const form = document.getElementById('register-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-password').value;
+      const conf = document.getElementById('reg-confirm').value;
+      if (pass !== conf) return alert('Passwords do not match.');
+      TrailerAuth.setUser(email, 'email');
+      location.href = 'index.html';
+    });
+    document.getElementById('browse-guest-register').addEventListener('click', () => {
+      TrailerAuth.setGuest();
+      location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
+

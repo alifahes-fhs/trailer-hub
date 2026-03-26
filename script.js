@@ -26,6 +26,8 @@ let focusedCardIdx = -1;
 
 /* ── DOM shortcut ── */
 const $ = id => document.getElementById(id);
+const auth = window.TrailerAuth;
+const providerCache = new Map();
 
 const MOOD_MAP = {
   laugh: { label: 'Laugh', genres: [35, 10751] },
@@ -35,6 +37,44 @@ const MOOD_MAP = {
   mindbend: { label: 'Mind-Bending', genres: [878, 9648, 53, 14] },
   family: { label: 'Family Time', genres: [10751, 16, 12] }
 };
+
+const PROVIDER_REGIONS = ['US', 'AE', 'GB'];
+
+async function getProviderNames(id, type) {
+  const key = `${type}:${id}`;
+  if (providerCache.has(key)) return providerCache.get(key);
+  const p = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/${type}/${id}/watch/providers?api_key=${API_KEY}`);
+      const data = await res.json();
+      const results = data.results || {};
+      let regionData = null;
+      for (const r of PROVIDER_REGIONS) {
+        if (results[r]) { regionData = results[r]; break; }
+      }
+      if (!regionData) return [];
+      const pool = [...(regionData.flatrate || []), ...(regionData.buy || []), ...(regionData.rent || [])];
+      const unique = [];
+      for (const pvd of pool) {
+        if (!unique.includes(pvd.provider_name)) unique.push(pvd.provider_name);
+      }
+      return unique.slice(0, 3);
+    } catch {
+      return [];
+    }
+  })();
+  providerCache.set(key, p);
+  return p;
+}
+
+function attachPlatformInfo(card, id, type) {
+  const el = card.querySelector('.platform-tags');
+  if (!el) return;
+  el.textContent = 'Platforms: ...';
+  getProviderNames(id, type).then(names => {
+    el.textContent = names.length ? `On: ${names.join(' · ')}` : 'On: Unavailable';
+  });
+}
 
 /* ================================================================
    STORAGE HELPERS
@@ -379,6 +419,7 @@ function buildCard(item, idx, container, type) {
     <div class="card-info">
       <div class="card-title">${title}${year ? ` <span style="color:var(--faint);font-weight:300">(${year})</span>` : ''}</div>
       <div class="star-rating">${stars}<span class="star-label">${userRating ? `${userRating}/5` : 'Rate'}</span></div>
+      <div class="platform-tags"></div>
     </div>
     <div class="card-actions" style="display: flex; gap: 6px; padding: 10px 12px 14px; border-top: 1px solid var(--border); margin-top: 4px;">
       <button class="card-action-btn wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 4px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
@@ -447,6 +488,7 @@ function buildCard(item, idx, container, type) {
     });
   });
 
+  attachPlatformInfo(card, item.id, type);
   container.appendChild(card);
 }
 
@@ -464,6 +506,7 @@ function saveUserRating(id, val) {
    RECENTLY VIEWED - FIXED VERSION
 ================================================================ */
 function addRecentlyViewed(item) {
+  if (!auth?.canUsePersonalFeatures?.()) return;
   const list = storage.get('recently');
   const filtered = list.filter(i => i.id !== item.id);
   filtered.unshift(item);
@@ -475,6 +518,12 @@ function renderRecentlyViewed() {
   const section = $('recently-section');
   const row = $('recently-row');
   if (!section || !row) return;
+
+  if (!auth?.canUsePersonalFeatures?.()) {
+    section.style.display = 'block';
+    row.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><h3>Login to unlock Recently Viewed</h3><p>Guests can browse trailers, but history sync is for signed-in users.</p></div>`;
+    return;
+  }
 
   const items = storage.get('recently');
   if (!items.length) {
@@ -519,11 +568,13 @@ function renderRecentlyViewed() {
           <span>${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}</span>
           ${score ? `<span style="font-family:var(--font-m);color:var(--gold);font-size:11px;background:rgba(0,0,0,.45);border:1px solid rgba(245,197,24,.2);padding:3px 8px;border-radius:999px;">${score}</span>` : ''}
         </div>
+        <div class="platform-tags"></div>
       </div>`;
 
     card.addEventListener('click', () => {
       window.location.href = `movie.html?id=${item.id}&type=${mediaType}`;
     });
+    attachPlatformInfo(card, item.id, mediaType);
     
     row.appendChild(card);
   });
@@ -722,6 +773,10 @@ function getPreferredMood() {
 async function loadTonightPicks() {
   const row = $('tonight-row');
   if (!row) return;
+  if (!auth?.canUsePersonalFeatures?.()) {
+    row.innerHTML = `<div class="empty-state"><div class="icon">✨</div><h3>Login to unlock Tonight Picks</h3><p>Sign in for one-tap personalized recommendations.</p></div>`;
+    return;
+  }
   row.innerHTML = skeletons(6);
 
   const preferredMood = getPreferredMood();
@@ -801,6 +856,10 @@ $('clear-recent')?.addEventListener('click', () => {
    WATCHLIST / WATCH LATER
 ================================================================ */
 function toggleList(key, item) {
+  if (!auth?.canUsePersonalFeatures?.()) {
+    auth?.requirePersonalFeature?.('Login required to save favorites/watchlist.');
+    return;
+  }
   storage.has(key, item.id) ? storage.remove(key, item.id) : storage.add(key, item);
 }
 
@@ -908,6 +967,7 @@ async function loadTrending() {
         <div style="padding: 10px 12px;">
           <div class="trending-title" style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
           <div class="trending-sub" style="font-size: 11px; color: var(--faint); margin: 4px 0;">${mediaType === 'tv' ? 'TV Show' : 'Movie'}${year ? ` · ${year}` : ''}${score ? ` · ${score}` : ''}</div>
+          <div class="platform-tags"></div>
           <button class="watch-trailer-btn" style="margin: 8px 0 6px; width: 100%; padding: 8px; background: var(--accent); border: none; border-radius: 8px; color: white; font-size: 11px; font-weight: 500; cursor: pointer;">▶ WATCH TRAILER</button>
           <div style="display: flex; gap: 6px; margin-top: 8px;">
             <button class="trending-wl-btn ${inWL ? 'saved' : ''}" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px; border-radius: 8px; background: var(--glass); border: 1px solid var(--border); cursor: pointer; font-size: 10px; font-weight: 500; color: var(--text);">
@@ -964,6 +1024,7 @@ async function loadTrending() {
         if (e.target.classList?.contains('trending-wl-btn') || e.target.classList?.contains('trending-wlat-btn') || e.target.classList?.contains('trending-detail-btn')) return;
         playTrailerInsideCard(item, mediaType, card);
       });
+      attachPlatformInfo(card, item.id, mediaType);
       
       row.appendChild(card);
     });
@@ -1337,6 +1398,8 @@ function shake(el) {
 /* ================================================================
    INIT
 ================================================================ */
+auth?.enforceAccess?.();
+auth?.renderNavAuth?.();
 updateBadges();
 renderRecentlyViewed();
 loadTrending();

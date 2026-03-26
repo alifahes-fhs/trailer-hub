@@ -37,10 +37,31 @@
       <div class="hero-tag"><span class="hero-dot"></span>Your cinematic universe</div>
       <h1 class="hero-title">EVERY<br><span class="hero-title-ghost">TRAILER.</span><br>ONE HUB.</h1>
       <p class="hero-sub">Search millions of movies and TV shows.<br>Watch trailers instantly. Never miss what's next.</p>
+      <div class="mood-strip" id="mood-strip">
+        <button class="mood-chip active" type="button" data-mood="">All Vibes</button>
+        <button class="mood-chip" type="button" data-mood="laugh">Laugh</button>
+        <button class="mood-chip" type="button" data-mood="heartbreak">Heartbreak</button>
+        <button class="mood-chip" type="button" data-mood="thrill">Thrill</button>
+        <button class="mood-chip" type="button" data-mood="romance">Romance</button>
+        <button class="mood-chip" type="button" data-mood="mindbend">Mind-Bending</button>
+        <button class="mood-chip" type="button" data-mood="family">Family Time</button>
+      </div>
       <div class="search-outer">
         <div class="search-wrapper-ac">
           <div class="search-box">
             <div class="search-filters">
+              <div class="filter-dd" id="mood-dd">
+                <button class="filter-btn" id="mood-btn" type="button">Mood <span class="caret">▾</span></button>
+                <div class="filter-menu" id="mood-menu" role="menu" aria-label="Pick a mood">
+                  <button class="filter-item active" type="button" data-mood="" data-label="All Vibes">All Vibes</button>
+                  <button class="filter-item" type="button" data-mood="laugh" data-label="Laugh">😂 Laugh</button>
+                  <button class="filter-item" type="button" data-mood="heartbreak" data-label="Heartbreak">💔 Heartbreak</button>
+                  <button class="filter-item" type="button" data-mood="thrill" data-label="Thrill">⚡ Thrill</button>
+                  <button class="filter-item" type="button" data-mood="romance" data-label="Romance">💕 Romance</button>
+                  <button class="filter-item" type="button" data-mood="mindbend" data-label="Mind-Bending">🧠 Mind-Bending</button>
+                  <button class="filter-item" type="button" data-mood="family" data-label="Family Time">👨‍👩‍👧 Family Time</button>
+                </div>
+              </div>
               <div class="filter-dd" id="genre-dd">
                 <button class="filter-btn" id="genre-btn" type="button">Genre <span class="caret">▾</span></button>
                 <div class="filter-menu" id="genre-menu" role="menu" aria-label="Pick a genre">
@@ -106,6 +127,20 @@
       <button class="clear-btn" id="clear-recent">Clear</button>
     </div>
     <div class="trending-row" id="recently-row" style="padding:20px 48px 0"></div>
+  </section>
+
+  <section class="trending-section" id="tonight-picks-section">
+    <div class="section-header" data-reveal>
+      <div><div class="section-eyebrow">Personalized from your history</div><h2 class="section-title">TONIGHT PICKS FOR YOU</h2></div>
+    </div>
+    <div id="tonight-row" data-reveal></div>
+  </section>
+
+  <section class="trending-section" id="hype-section">
+    <div class="section-header" data-reveal>
+      <div><div class="section-eyebrow">Live momentum</div><h2 class="section-title">TRAILER TIMELINE / HYPE METER</h2></div>
+    </div>
+    <div id="hype-list" data-reveal></div>
   </section>
 
   <section class="results-section" id="results-section">

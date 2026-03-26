@@ -13,6 +13,7 @@ let activeGenre  = '';
 let activeRating = '';
 let activeAgeGroup = '';
 let activeMinScore = '';
+let activeMood = '';
 let activeYear   = '';
 let activeSort   = 'popularity.desc';
 let lastQuery    = '';
@@ -25,6 +26,15 @@ let focusedCardIdx = -1;
 
 /* ── DOM shortcut ── */
 const $ = id => document.getElementById(id);
+
+const MOOD_MAP = {
+  laugh: { label: 'Laugh', genres: [35, 10751] },
+  heartbreak: { label: 'Heartbreak', genres: [18, 10749] },
+  thrill: { label: 'Thrill', genres: [53, 28, 80, 27] },
+  romance: { label: 'Romance', genres: [10749, 35] },
+  mindbend: { label: 'Mind-Bending', genres: [878, 9648, 53, 14] },
+  family: { label: 'Family Time', genres: [10751, 16, 12] }
+};
 
 /* ================================================================
    STORAGE HELPERS
@@ -216,7 +226,9 @@ async function doSearch(reset = false) {
 
   try {
     const yearParam = activeYear ? `&primary_release_year=${activeYear}` : '';
-    const genreParam = activeGenre ? `&with_genres=${activeGenre}` : '';
+    const moodGenres = activeMood && MOOD_MAP[activeMood] ? MOOD_MAP[activeMood].genres.join(',') : '';
+    const effectiveGenres = moodGenres || activeGenre;
+    const genreParam = effectiveGenres ? `&with_genres=${effectiveGenres}` : '';
     // Age/certification filtering only applies cleanly to Movie discover.
     const ageCertParam = (() => {
       if (lastType !== 'movie') return '';
@@ -246,8 +258,9 @@ async function doSearch(reset = false) {
     totalPages = Math.min(data.total_pages || 1, 500);
     let results = data.results || [];
 
-    if (lastQuery && activeGenre) {
-      results = results.filter(i => (i.genre_ids || []).includes(Number(activeGenre)));
+    if (lastQuery && effectiveGenres) {
+      const wanted = effectiveGenres.split(',').map(n => Number(n));
+      results = results.filter(i => (i.genre_ids || []).some(g => wanted.includes(g)));
     }
     if (lastQuery && activeYear) {
       results = results.filter(i => {
@@ -566,6 +579,26 @@ function initFilterDropdowns() {
     });
   }
 
+  const moodDd = $('mood-dd');
+  const moodBtn = $('mood-btn');
+  const moodMenu = $('mood-menu');
+  if (moodDd && moodBtn && moodMenu) {
+    moodBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = moodDd.classList.contains('open');
+      closeAllMenus();
+      moodDd.classList.toggle('open', !isOpen);
+    });
+    moodMenu.querySelectorAll('.filter-item').forEach(item => {
+      item.addEventListener('click', () => {
+        moodMenu.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
+        item.classList.add('active');
+        applyMood(item.dataset.mood ?? '');
+        closeAllMenus();
+      });
+    });
+  }
+
   const ageDd = $('age-dd');
   const ageBtn = $('age-btn');
   const ageMenu = $('age-menu');
@@ -628,6 +661,134 @@ function initFilterDropdowns() {
         closeAllMenus();
       });
     });
+  }
+}
+
+function recordMoodPreference(moodKey) {
+  if (!moodKey) return;
+  const prefs = storage.getObj('moodPrefs');
+  prefs[moodKey] = (prefs[moodKey] || 0) + 1;
+  storage.setObj('moodPrefs', prefs);
+}
+
+function applyMood(moodKey) {
+  activeMood = moodKey;
+  recordMoodPreference(moodKey);
+
+  // Sync mood chips
+  document.querySelectorAll('.mood-chip').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.mood || '') === moodKey);
+  });
+
+  // Sync mood dropdown button
+  const label = moodKey && MOOD_MAP[moodKey] ? MOOD_MAP[moodKey].label : 'Mood';
+  const moodBtn = $('mood-btn');
+  if (moodBtn) moodBtn.innerHTML = `${moodKey ? `Mood: ${label}` : 'Mood'} <span class="caret">▾</span>`;
+
+  // Sync dropdown item highlight
+  document.querySelectorAll('#mood-menu .filter-item').forEach(item => {
+    item.classList.toggle('active', (item.dataset.mood || '') === moodKey);
+  });
+
+  // Run discover search with selected mood
+  lastQuery = '';
+  currentPage = 1;
+  lastType = $('search-type')?.value || lastType || 'movie';
+  if ($('movie-search')) $('movie-search').value = '';
+  if ($('results-heading')) $('results-heading').textContent = moodKey ? label : 'Discover';
+  if ($('results-eyebrow')) $('results-eyebrow').textContent = moodKey ? 'Mood Discovery' : 'Discover';
+  pushState('', '');
+  doSearch(true);
+  loadTonightPicks();
+}
+
+function initMoodChips() {
+  document.querySelectorAll('.mood-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyMood(btn.dataset.mood || '');
+    });
+  });
+}
+
+function getPreferredMood() {
+  if (activeMood) return activeMood;
+  const prefs = storage.getObj('moodPrefs');
+  const entries = Object.entries(prefs);
+  if (!entries.length) return '';
+  entries.sort((a, b) => Number(b[1]) - Number(a[1]));
+  return entries[0][0];
+}
+
+async function loadTonightPicks() {
+  const row = $('tonight-row');
+  if (!row) return;
+  row.innerHTML = skeletons(6);
+
+  const preferredMood = getPreferredMood();
+  const moodGenres = preferredMood && MOOD_MAP[preferredMood] ? MOOD_MAP[preferredMood].genres.join(',') : '';
+  const type = $('search-type')?.value || 'movie';
+  const baseDiscover = `${BASE_URL}/discover/${type}?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&vote_count.gte=120&page=1`;
+  const url = `${baseDiscover}${moodGenres ? `&with_genres=${moodGenres}` : ''}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const items = (data.results || []).slice(0, 8);
+    row.innerHTML = '';
+    if (!items.length) {
+      row.innerHTML = `<div class="empty-state"><div class="icon">🍿</div><h3>No picks yet</h3><p>Watch a few trailers and pick a mood to get smarter picks.</p></div>`;
+      return;
+    }
+    items.forEach((item, idx) => buildCard(item, idx, row, type));
+  } catch {
+    row.innerHTML = `<div class="empty-state"><div class="icon">⚡</div><h3>Picks unavailable</h3><p>Try again in a moment.</p></div>`;
+  }
+}
+
+async function loadHypeTimeline() {
+  const list = $('hype-list');
+  if (!list) return;
+  list.innerHTML = `<div style="color:var(--faint);font-size:13px;">Loading hype meter...</div>`;
+  try {
+    const res = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
+    const data = await res.json();
+    const items = (data.results || []).slice(0, 10);
+    const prevRanks = storage.getObj('hypePrevRanks');
+    const nextRanks = {};
+
+    list.innerHTML = '';
+    items.forEach((item, idx) => {
+      const rank = idx + 1;
+      nextRanks[item.id] = rank;
+      const prev = Number(prevRanks[item.id] || 0);
+      const move = prev ? prev - rank : 0;
+      const moveText = !prev ? 'NEW' : move > 0 ? `↑ ${move}` : move < 0 ? `↓ ${Math.abs(move)}` : '→';
+      const moveClass = !prev ? 'new' : move > 0 ? 'up' : move < 0 ? 'down' : 'flat';
+      const title = item.title || item.name || 'Unknown';
+      const hype = Math.min(100, Math.max(8, Math.round((Number(item.popularity || 0) / 400) * 100)));
+      const type = item.media_type === 'tv' ? 'tv' : 'movie';
+
+      const row = document.createElement('div');
+      row.className = 'hype-item';
+      row.innerHTML = `
+        <div class="hype-left">
+          <div class="hype-rank">#${rank}</div>
+          <div class="hype-title-wrap">
+            <div class="hype-title">${title}</div>
+            <div class="hype-move ${moveClass}">${moveText}</div>
+          </div>
+        </div>
+        <div class="hype-bar"><span style="width:${hype}%"></span></div>
+      `;
+      row.addEventListener('click', () => {
+        window.location.href = `movie.html?id=${item.id}&type=${type}`;
+      });
+      list.appendChild(row);
+    });
+
+    storage.setObj('hypePrevRanks', nextRanks);
+  } catch {
+    list.innerHTML = `<div style="color:var(--faint);font-size:13px;">Could not load hype timeline.</div>`;
   }
 }
 
@@ -1179,8 +1340,11 @@ function shake(el) {
 updateBadges();
 renderRecentlyViewed();
 loadTrending();
+loadTonightPicks();
+loadHypeTimeline();
 readURLState();
 loadMovieDetail();
+initMoodChips();
 initFilterDropdowns();
 
 // Add shake animation style

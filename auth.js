@@ -50,42 +50,47 @@
       host.id = 'auth-nav-host';
       nav.appendChild(host);
     }
-  
     if (isLoggedIn()) {
       const u = getUser();
       const name = (u?.email || 'User').split('@')[0];
-  
+    
       host.innerHTML = `
         <div class="profile-dropdown">
           <button class="profile-btn" id="profile-btn">
             👤 ${name} <span class="caret">▾</span>
           </button>
-  
+    
           <div class="dropdown-menu" id="profile-menu">
-            <a href="profile.html" class="dropdown-item">Profile</a>
-            <button class="dropdown-item" id="logout-btn">Logout</button>
+            <div class="profile-pop">
+              <div class="profile-pop-header">Your Profile</div>
+              <div class="profile-pop-info">
+                <strong>Email:</strong> ${u.email} <br>
+                <strong>Provider:</strong> ${u.provider}
+              </div>
+              <button class="dropdown-item" id="logout-btn">Logout</button>
+            </div>
           </div>
         </div>
       `;
-  
+    
       const btn = host.querySelector('#profile-btn');
       const menu = host.querySelector('#profile-menu');
-  
+    
       // toggle dropdown
       btn.addEventListener('click', () => {
         menu.classList.toggle('open');
       });
-  
+    
       // close when clicking outside
       document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !menu.contains(e.target)) {
           menu.classList.remove('open');
         }
       });
-  
+    
       // logout
       host.querySelector('#logout-btn')?.addEventListener('click', logout);
-  
+    
       return;
     }
   

@@ -106,8 +106,10 @@
               </div>
             </div>
             <input type="text" id="movie-search" placeholder="Search movies, TV shows…" autocomplete="off">
-            <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>
-            <button id="search-btn">Search</button>
+            <div class="search-box-right">
+              <select id="search-type"><option value="movie">Movie</option><option value="tv">TV Show</option></select>
+              <button id="search-btn">Search</button>
+            </div>
           </div>
           <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
         </div>
@@ -207,7 +209,7 @@
     </div>
   </div>
 
-  <!-- Mobile & overflow fixes -->
+  <!-- Mobile & overflow fixes + detail trailer fix -->
   <style>
     html, body { max-width: 100vw; overflow-x: hidden; }
     .cast-row {
@@ -223,6 +225,28 @@
     .cast-name, .cast-role { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .hero-art { overflow: hidden; }
     @media (max-width: 768px) { .hero-art { display: none; } }
+
+    /* Detail page trailer player — shown below the action buttons */
+    #detail-trailer-container {
+      width: 100%;
+      max-width: 640px;
+      margin-top: 20px;
+      border-radius: 16px;
+      overflow: hidden;
+      display: none;
+    }
+    #detail-trailer-container.active {
+      display: block;
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+    }
+    #detail-trailer-container iframe,
+    #detail-trailer-container > div {
+      position: absolute;
+      inset: 0; width: 100%; height: 100%;
+      border: none; border-radius: 16px;
+    }
   </style>
 
   <script src="auth.js"></script>

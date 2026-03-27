@@ -1418,8 +1418,48 @@
          </div>
        </div>`;
    
-     $('detail-trailer-btn')?.addEventListener('click', () => {
-       openTrailerModal(d, type, document.getElementById('movie-detail'));
+     $('detail-trailer-btn')?.addEventListener('click', async () => {
+       let wrap = document.getElementById('detail-trailer-container');
+       if (!wrap) {
+         // Create a trailer container right after the actions div
+         wrap = document.createElement('div');
+         wrap.id = 'detail-trailer-container';
+         const actionsDiv = $('detail-trailer-btn')?.closest('.detail-actions');
+         actionsDiv?.insertAdjacentElement('afterend', wrap);
+       }
+       // Toggle off if already showing
+       if (wrap.classList.contains('active')) {
+         wrap.classList.remove('active');
+         wrap.innerHTML = '';
+         $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+         return;
+       }
+       wrap.classList.add('active');
+       $('detail-trailer-btn').textContent = '⏳ Loading…';
+       wrap.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;border-radius:16px"><div style="width:36px;height:36px;border:3px solid #6C63FF;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div></div>`;
+       try {
+         const videoUrl = type === 'tv'
+           ? `${BASE_URL}/tv/${d.id}/videos?api_key=${API_KEY}`
+           : `${BASE_URL}/movie/${d.id}/videos?api_key=${API_KEY}`;
+         const res = await fetch(videoUrl);
+         const data = await res.json();
+         const vids = data.results || [];
+         const clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
+           || vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+           || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
+           || vids.find(v => v.site === 'YouTube');
+         if (!clip) {
+           wrap.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--faint);flex-direction:column;gap:8px;border-radius:16px"><span style="font-size:32px">🎬</span><p style="font-size:13px">No trailer available</p></div>`;
+           $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+           return;
+         }
+         wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.key}?autoplay=1&rel=0&modestbranding=1" allow="autoplay;encrypted-media;picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:16px"></iframe>`;
+         $('detail-trailer-btn').textContent = '✕ Close Trailer';
+       } catch {
+         wrap.classList.remove('active');
+         wrap.innerHTML = '';
+         $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+       }
      });
      
      $('detail-wl-btn')?.addEventListener('click', () => {

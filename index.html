@@ -207,7 +207,28 @@
     </div>
   </div>
 
+  <!-- Mobile & overflow fixes -->
+  <style>
+    html, body { max-width: 100vw; overflow-x: hidden; }
+    .cast-row {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 12px;
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .cast-card { min-width: 90px; max-width: 90px; flex-shrink: 0; overflow: hidden; }
+    .cast-name, .cast-role { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hero-art { overflow: hidden; }
+    @media (max-width: 768px) { .hero-art { display: none; } }
+  </style>
+
   <script src="auth.js"></script>
+  <!-- Socket.io client — served by your Watch Party server -->
+  <script src="http://localhost:3000/socket.io/socket.io.js" onerror="console.warn('Watch Party server not running')"></script>
   <script src="script.js"></script>
+  <script src="watch-party.js"></script>
 </body>
 </html>

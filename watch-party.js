@@ -8,7 +8,7 @@
 
    (function () {
     /* ── Config ── */
-    const SOCKET_URL = 'http://localhost:3000'; // Change to your deployed server URL
+    const SOCKET_URL = 'trailer-hub-production.up.railway.app'; // Change to your deployed server URL
   
     /* ── State ── */
     let socket = null;

@@ -11,8 +11,8 @@
    const app = express();
    const server = http.createServer(app);
    const io = new Server(server, {
-     cors: { origin: '*' }
-   });
+    cors: { origin: 'https://alifahes-fhs.github.io' }
+  });
    
    /* ── Serve your existing frontend files ── */
    app.use(express.static(path.join(__dirname, 'public')));

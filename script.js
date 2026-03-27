@@ -1041,7 +1041,7 @@
    ================================================================ */
    
    // New function specifically for playing trailers in a given container (used by recently viewed)
-   async function playTrailerInContainer(item, type, trailerContainer, card) {
+   async function _plainPlayTrailer(item, type, trailerContainer, card) {
      console.log('=== playTrailerInContainer START ===');
      console.log('Item:', item.title || item.name);
      console.log('Trailer container:', trailerContainer);
@@ -1197,7 +1197,7 @@
      console.log('Found container:', trailerContainer.id);
      
      // Use the container function
-     await playTrailerInContainer(item, type, trailerContainer, actualCard);
+     await _plainPlayTrailer(item, type, trailerContainer, actualCard);
    }
    
    async function openTrailerModal(item, type, anchorEl) {
@@ -1246,11 +1246,10 @@
    }
    
    /* Override playTrailerInContainer to hook WatchParty when in a room */
-   const _origPlayTrailerInContainer = playTrailerInContainer;
    async function playTrailerInContainer(item, type, trailerContainer, card) {
      // If not in a Watch Party room, use original behaviour
      if (!window.WatchParty?.isInRoom()) {
-       return _origPlayTrailerInContainer(item, type, trailerContainer, card);
+       return _plainPlayTrailer(item, type, trailerContainer, card);
      }
    
      // In a room — use YT IFrame API for sync

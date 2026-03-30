@@ -415,7 +415,7 @@
         var title = titleEl ? titleEl.textContent.trim() : "This Movie";
         var btn = document.createElement("button");
         btn.className = "watch-with-me-btn";
-        btn.innerHTML = "<span class="wwm-icon">👥</span> Watch With Me";
+        btn.innerHTML = "<span class='wwm-icon-wrap'>👥</span> Watch With Me";
         btn.addEventListener("click", function(e) {
           e.stopPropagation();
           if (window.openWatchWithMe) window.openWatchWithMe(title);

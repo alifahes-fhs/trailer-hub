@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trailer Hub — Discover Movies &amp; TV</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="responsive-fixes.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6C63FF">
 </head>
@@ -249,10 +250,188 @@
     }
   </style>
 
+  <!-- ── WATCH WITH ME MODAL ── -->
+  <div id="wwm-modal-backdrop" role="dialog" aria-modal="true" aria-label="Watch With Me">
+    <div id="wwm-modal">
+      <button class="wwm-close" id="wwm-modal-close" title="Close">✕</button>
+      <div class="wwm-icon-wrap">🎬</div>
+      <div class="wwm-title">WATCH WITH ME</div>
+      <div class="wwm-movie-name" id="wwm-movie-name">Movie Title</div>
+      <div class="wwm-divider"></div>
+      <div class="wwm-label">Your Room Link</div>
+      <div class="wwm-link-row">
+        <input type="text" id="wwm-room-link" readonly aria-label="Room link">
+        <button class="wwm-copy-btn" id="wwm-copy-btn">Copy</button>
+      </div>
+      <div class="wwm-share-note">
+        Share this link with friends so you can watch together. Everyone who joins will see the same trailer at the same time.
+      </div>
+      <div class="wwm-actions">
+        <button class="wwm-action-btn primary" id="wwm-start-btn">
+          <span>▶</span> Start Session
+        </button>
+        <button class="wwm-action-btn secondary" id="wwm-share-btn">
+          <span>↗</span> Share Link
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="auth.js"></script>
   <!-- Socket.io client — served by your Watch Party server -->
   <script src="http://trailer-hub-production.up.railway.app/socket.io/socket.io.js" onerror="console.warn('Watch Party server not running')"></script>
   <script src="script.js"></script>
   <script src="watch-party.js"></script>
+
+  <script>
+  /* Watch With Me Modal Logic */
+  (function () {
+    var backdrop = document.getElementById("wwm-modal-backdrop");
+    var closeBtn = document.getElementById("wwm-modal-close");
+    var movieName = document.getElementById("wwm-movie-name");
+    var roomLink = document.getElementById("wwm-room-link");
+    var copyBtn = document.getElementById("wwm-copy-btn");
+    var startBtn = document.getElementById("wwm-start-btn");
+    var shareBtn = document.getElementById("wwm-share-btn");
+
+    function generateRoomId() {
+      return Math.random().toString(36).substring(2,8).toUpperCase() +
+             Math.random().toString(36).substring(2,6).toUpperCase();
+    }
+
+    function openWWM(title) {
+      var roomId = generateRoomId();
+      var link = window.location.origin + "/watch-room?id=" + roomId;
+      if (movieName) movieName.textContent = title || "This Movie";
+      if (roomLink) roomLink.value = link;
+      if (backdrop) backdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeWWM() {
+      if (backdrop) backdrop.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    window.openWatchWithMe = openWWM;
+
+    if (closeBtn) closeBtn.addEventListener("click", closeWWM);
+    if (backdrop) backdrop.addEventListener("click", function(e) {
+      if (e.target === backdrop) closeWWM();
+    });
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closeWWM();
+    });
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function() {
+        var val = roomLink ? roomLink.value : "";
+        if (!val) return;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(val).then(function() {
+            copyBtn.textContent = "Copied!";
+            copyBtn.classList.add("copied");
+            setTimeout(function() {
+              copyBtn.textContent = "Copy";
+              copyBtn.classList.remove("copied");
+            }, 2000);
+          });
+        } else {
+          roomLink.select();
+          document.execCommand("copy");
+          copyBtn.textContent = "Copied!";
+          setTimeout(function() { copyBtn.textContent = "Copy"; }, 2000);
+        }
+      });
+    }
+
+    if (startBtn) {
+      startBtn.addEventListener("click", function() {
+        var link = roomLink ? roomLink.value : "";
+        if (link) window.open(link, "_blank");
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener("click", function() {
+        var link = roomLink ? roomLink.value : "";
+        var title = movieName ? movieName.textContent : "a movie";
+        if (navigator.share) {
+          navigator.share({ title: "Watch " + title + " with me!", url: link });
+        } else {
+          if (navigator.clipboard) navigator.clipboard.writeText(link);
+          shareBtn.innerHTML = "✓ Copied";
+          setTimeout(function() { shareBtn.innerHTML = "<span>↗</span> Share Link"; }, 2000);
+        }
+      });
+    }
+  })();
+
+  /* Inline Player Fullscreen */
+  (function() {
+    function injectFullscreenBtn() {
+      var actions = document.getElementById("inline-player-actions");
+      if (!actions || document.getElementById("inline-player-fullscreen-btn")) return;
+      var btn = document.createElement("button");
+      btn.id = "inline-player-fullscreen-btn";
+      btn.innerHTML = "⛶ Fullscreen";
+      btn.addEventListener("click", function() {
+        var wrap = document.getElementById("inline-player-wrap");
+        var videoEl = document.getElementById("inline-player-video");
+        var target = wrap || videoEl;
+        if (!target) return;
+        if (document.fullscreenElement) {
+          document.exitFullscreen && document.exitFullscreen();
+        } else {
+          var fn = target.requestFullscreen || target.webkitRequestFullscreen || target.mozRequestFullScreen;
+          if (fn) fn.call(target);
+        }
+      });
+      actions.appendChild(btn);
+    }
+    var playerWrap = document.getElementById("inline-player-wrap");
+    if (playerWrap) {
+      var obs = new MutationObserver(function() {
+        if (playerWrap.classList.contains("open") || playerWrap.style.display !== "none") {
+          setTimeout(injectFullscreenBtn, 200);
+        }
+      });
+      obs.observe(playerWrap, { attributes: true, attributeFilter: ["class", "style"] });
+    }
+    document.addEventListener("fullscreenchange", function() {
+      var btn = document.getElementById("inline-player-fullscreen-btn");
+      if (btn) btn.innerHTML = document.fullscreenElement ? "✕ Exit Full" : "⛶ Fullscreen";
+    });
+  })();
+
+  /* Watch With Me button injector for dynamically created cards */
+  (function() {
+    function injectWWMButtons() {
+      document.querySelectorAll(".card-overlay").forEach(function(overlay) {
+        if (overlay.querySelector(".watch-with-me-btn")) return;
+        var card = overlay.closest(".movie-card");
+        if (!card) return;
+        var titleEl = card.querySelector(".card-title");
+        var title = titleEl ? titleEl.textContent.trim() : "This Movie";
+        var btn = document.createElement("button");
+        btn.className = "watch-with-me-btn";
+        btn.innerHTML = "<span class="wwm-icon">👥</span> Watch With Me";
+        btn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (window.openWatchWithMe) window.openWatchWithMe(title);
+        });
+        overlay.appendChild(btn);
+      });
+    }
+    ["results-grid", "trending-row", "tonight-row", "recently-row"].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var obs = new MutationObserver(injectWWMButtons);
+      obs.observe(el, { childList: true, subtree: true });
+    });
+    setInterval(injectWWMButtons, 1500);
+    window.addEventListener("load", injectWWMButtons);
+  })();
+  </script>
 </body>
 </html>

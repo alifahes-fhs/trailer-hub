@@ -289,9 +289,12 @@
   
     function startRoom() {
       const roomId = genRoomId();
+      currentRoomId=roomId;
       const url = new URL(window.location.href);
       url.searchParams.set('room', roomId);
-      window.location.href = url.toString();
+      window.history.replaceState({}, '', url.toString());
+      connectSocket(roomId);
+      buildPartyBar();
     }
     function buildPartyBar() {
       const bar = document.createElement('div');

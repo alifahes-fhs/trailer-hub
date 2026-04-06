@@ -254,8 +254,15 @@
    
    /* cast */
    .cast-section{margin-bottom:48px}
-   .cast-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
-   .cast-scroll::-webkit-scrollbar{display:none}
+   .cast-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 0 12px 6px; /* add horizontal padding */
+    scrollbar-width: none;
+  }
+  .cast-scroll::-webkit-scrollbar { display: none; }
+  
    .cast-card{flex-shrink:0;width:100px;text-align:center;cursor:pointer;transition:transform .3s var(--ease)}
    .cast-card:hover{transform:translateY(-4px)}
    .cast-avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 8px;border:2px solid var(--border2);background:var(--bg3);display:block}
@@ -2635,6 +2642,7 @@ body.light .wwm-close { background: rgba(18,18,30,.06); border-color: var(--bord
 body.light .wwm-close:hover { background: rgba(18,18,30,.1); color: var(--text); }
 body.light .wwm-action-btn.secondary { background: rgba(18,18,30,.05); border-color: var(--border2); color: var(--text); }
 
+
 body.has-watch-party {
-  padding-bottom: 80px; /* match bar height */
+  padding-bottom: 90px; /* match bar height */
 }

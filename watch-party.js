@@ -273,7 +273,7 @@
       /* We'll inject a "Watch With Me" button next to the existing
          inline player actions area once the player opens */
       const observer = new MutationObserver(() => {
-        const actionsEl = document.getElementById('inline-player-actions');
+        const actionsEl = document.getElementById('inline-player-actions','player-actions','yt-related-controls');
         if (actionsEl && !document.getElementById('wp-create-btn')) {
           const btn = document.createElement('button');
           btn.id = 'wp-create-btn';
@@ -293,6 +293,17 @@
       url.searchParams.set('room', roomId);
       window.location.href = url.toString();
     }
+    function buildPartyBar() {
+      const bar = document.createElement('div');
+      bar.id = 'watch-party-bar';
+      // ... existing innerHTML ...
+      document.body.appendChild(bar);
+      injectBarStyles();
+    
+      // Add bottom padding so content isn’t cut off
+      document.body.classList.add('has-watch-party');
+    }
+    
   
     /* ================================================================
        STYLES

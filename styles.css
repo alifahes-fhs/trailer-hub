@@ -2646,3 +2646,311 @@ body.light .wwm-action-btn.secondary { background: rgba(18,18,30,.05); border-co
 body.has-watch-party {
   padding-bottom: 90px; /* match bar height */
 }
+
+
+/* ============================================================
+   TRAILER HUB — responsive-fixes.css  v4
+   Fixes: cropped sections, cast scroll, watch party,
+          card info button visible, similar grid, responsive
+   ============================================================ */
+
+/* 0. GLOBAL */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; overflow-x: hidden; max-width: 100vw; }
+img, video, iframe, embed, object { max-width: 100%; }
+
+/* 1. HEADER */
+header { padding: 0 clamp(16px, 4vw, 48px); }
+@media (max-width: 860px) {
+  header { height: 60px; }
+  nav { gap: 10px; }
+  .nav-list-btn { font-size: 0; gap: 4px; }
+  .nav-list-btn svg { opacity: 1; width: 18px; height: 18px; }
+  .nav-badge { font-size: 9px; min-width: 16px; height: 16px; }
+  nav > a[href="#trending"] { display: none; }
+}
+@media (max-width: 600px) {
+  header { height: 56px; }
+  .logo { font-size: 18px; letter-spacing: 2px; }
+  nav { gap: 6px; }
+  #nav-watchlater-btn { display: none; }
+  nav > a:not(.btn-pill):not(.logo) { display: none; }
+  .btn-pill { font-size: 11px; padding: 7px 13px; }
+  .theme-toggle { width: 30px; height: 30px; font-size: 13px; }
+}
+
+/* 2. HERO */
+.hero { overflow: hidden; }
+.hero-inner { width: 100%; max-width: 680px; padding-right: 0; }
+@media (max-width: 1100px) { .hero { padding: 90px 32px 0; } .hero-art { right: 20px; } .art-card { width: 100px; } }
+@media (max-width: 860px) { .hero { padding: 80px 24px 80px; min-height: auto; } .hero-art { display: none !important; } .hero-inner { max-width: 100%; } }
+@media (max-width: 600px) {
+  .hero { padding: 70px 16px 56px; }
+  .hero-title { font-size: clamp(44px, 15vw, 72px); }
+  .hero-sub { font-size: 14px; margin-bottom: 24px; }
+  .hero-tag { font-size: 10px; margin-bottom: 14px; }
+  .mood-strip { gap: 6px; margin-bottom: 12px; }
+  .mood-chip { padding: 6px 10px; font-size: 11px; }
+  .scroll-cue { display: none; }
+}
+
+/* 3. SEARCH */
+.search-wrapper-ac, .search-outer { width: 100%; }
+@media (max-width: 700px) {
+  .search-box { flex-direction: column !important; align-items: stretch !important; border-radius: 20px !important; padding: 10px !important; gap: 8px !important; }
+  .search-filters { width: 100%; flex-wrap: wrap; gap: 6px; display: grid; grid-template-columns: 1fr 1fr; }
+  .filter-btn { width: 100%; justify-content: space-between; padding: 9px 12px; font-size: 11px; }
+  .filter-menu { left: 0; right: 0; min-width: 0; }
+  #movie-search { width: 100%; padding: 10px 8px; border-top: 1px solid var(--border); }
+  .search-box-right { width: 100%; display: flex; gap: 8px; }
+  .search-box select { flex: 1; padding: 9px 12px; font-size: 13px; text-align: center; }
+  #search-btn { flex: 1; padding: 10px 14px; }
+}
+
+/* 4. SECTIONS PADDING */
+.trending-section, .results-section, .recently-section, #hype-section, #tonight-picks-section {
+  padding-left: clamp(16px, 4vw, 48px);
+  padding-right: clamp(16px, 4vw, 48px);
+}
+.section-header { flex-wrap: wrap; gap: 12px; }
+.divider { margin: 0 clamp(16px, 4vw, 48px); }
+.cta-section { padding: 80px clamp(16px, 4vw, 48px); }
+footer { padding: 24px clamp(16px, 4vw, 48px); flex-wrap: wrap; gap: 12px; }
+@media (max-width: 500px) {
+  footer { flex-direction: column; align-items: center; text-align: center; }
+  .section-title { font-size: 26px; }
+  #recently-section .section-header { padding: 32px 16px 0 !important; }
+  #recently-row { padding: 16px !important; }
+}
+
+/* 5. CARDS GRID */
+#results-grid, .skeleton-grid, #tonight-row {
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 14px;
+}
+@media (max-width: 500px) {
+  #results-grid, .skeleton-grid, #tonight-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
+/* 6. MOVIE CARD — Fix info popup visibility (the card's inline mini-popup) */
+/* Cards need overflow:visible so popups aren't clipped by grid */
+.movie-card { overflow: visible !important; }
+.card-poster-wrap { overflow: hidden; border-radius: var(--r-lg) var(--r-lg) 0 0; position: relative; }
+.card-info { overflow: hidden; }
+/* Grid containers must not clip */
+#results-grid, .skeleton-grid, #tonight-row, #similar-grid { overflow: visible !important; }
+.card-overlay { z-index: 3; }
+.card-rating { z-index: 4; }
+
+/* The "Full Details" quick info popup that appears on hover */
+.card-quick-info {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px) scale(0.95);
+  top: calc(100% + 4px);
+  width: 200px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+  z-index: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.movie-card:hover .card-quick-info {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* 7. TRENDING CARDS */
+.trending-card { width: clamp(150px, 38vw, 200px); }
+@media (max-width: 480px) { .trending-card { width: 148px; } }
+
+/* 8. INLINE PLAYER */
+#inline-player-box { padding: 16px 20px 20px; }
+@media (max-width: 600px) {
+  #inline-player-box { padding: 12px 14px 16px; }
+  #inline-player-title { font-size: 18px; }
+  #inline-player-actions { gap: 8px; }
+  #inline-player-actions button { font-size: 11px; padding: 8px 14px; }
+}
+
+/* 9. FULLSCREEN BUTTON */
+#inline-player-fullscreen-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border2); border-radius: 99px;
+  color: var(--text); font-family: var(--font-b); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.25s var(--ease); white-space: nowrap;
+}
+#inline-player-fullscreen-btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
+
+/* 10. CAST SCROLL — all cast visible, scroll left/right */
+.cast-scroll, .cast-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  gap: 14px !important;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(255,255,255,0.06);
+}
+.cast-scroll::-webkit-scrollbar, .cast-row::-webkit-scrollbar { height: 4px; }
+.cast-scroll::-webkit-scrollbar-track, .cast-row::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); border-radius: 2px; }
+.cast-scroll::-webkit-scrollbar-thumb, .cast-row::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+.cast-card { flex-shrink: 0 !important; scroll-snap-align: start; width: 90px !important; text-align: center; }
+.cast-photo, .cast-photo-placeholder { flex-shrink: 0 !important; }
+.cast-section, .detail-cast-section { overflow: visible; }
+
+/* 11. MOVIE DETAIL PAGE — Fix ALL cropping */
+.detail-backdrop { min-height: auto !important; overflow: visible !important; padding-bottom: 60px; }
+.detail-backdrop-img { position: fixed !important; z-index: -1 !important; }
+.detail-content {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 220px 1fr;
+  gap: 40px; padding: 110px clamp(16px, 4vw, 48px) 60px;
+  max-width: 1200px; margin: 0 auto;
+  align-items: start; width: 100%; overflow: visible !important;
+}
+.detail-info { overflow: visible !important; min-width: 0; }
+.detail-stats { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+.detail-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* 12. SIMILAR SECTION */
+#similar-section { padding: 0 clamp(16px, 4vw, 48px) 80px !important; display: block !important; }
+#similar-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+  gap: 16px !important; overflow: visible !important;
+}
+
+/* 13. RESPONSIVE DETAIL */
+@media (max-width: 900px) {
+  .detail-content { grid-template-columns: 1fr; padding: 84px clamp(16px,4vw,20px) 40px; gap: 24px; }
+  .detail-poster, .detail-poster-placeholder { width: 160px; margin: 0 auto; display: block; }
+  .detail-title { font-size: clamp(28px, 9vw, 56px); }
+  .detail-stats { grid-template-columns: repeat(2, 1fr); }
+  #similar-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important; }
+}
+@media (max-width: 600px) {
+  .detail-content { padding: 72px 14px 32px; gap: 16px; }
+  .detail-poster, .detail-poster-placeholder { width: 130px; }
+  .detail-title { font-size: clamp(24px, 10vw, 44px); }
+  .detail-overview { font-size: 14px; line-height: 1.7; }
+  .detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .detail-action { justify-content: center; padding: 11px 10px; font-size: 12px; }
+  .detail-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .detail-cast-title { font-size: 18px; }
+  #similar-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  #similar-section { padding: 0 14px 48px !important; }
+}
+
+/* 14. WATCH WITH ME BUTTON */
+.watch-with-me-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 8px 10px; margin-top: 6px;
+  background: linear-gradient(135deg, #ff6584, #ff3355);
+  color: #fff; font-family: var(--font-b, sans-serif);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.7px;
+  text-transform: uppercase; border: none; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; z-index: 10; flex-shrink: 0; white-space: nowrap;
+}
+.watch-with-me-btn:hover { background: linear-gradient(135deg, #ff3355, #cc0033); transform: scale(1.03); box-shadow: 0 6px 18px rgba(255,51,85,0.45); }
+@media (hover: none) {
+  .card-overlay { opacity: 1 !important; background: linear-gradient(to top, rgba(7,7,15,1) 0%, rgba(7,7,15,.88) 45%, rgba(7,7,15,0) 72%, transparent 100%) !important; }
+  .card-overview { display: none !important; }
+}
+
+/* 15. WATCH WITH ME MODAL */
+#wwm-modal-backdrop {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#wwm-modal-backdrop.open { opacity: 1; pointer-events: all; }
+#wwm-modal {
+  background: var(--bg2, #0d0d1c); border: 1px solid var(--border2, rgba(255,255,255,.14));
+  border-radius: 24px; padding: 32px 28px 28px; width: min(480px, 100%);
+  position: relative; box-shadow: 0 40px 100px rgba(0,0,0,.65);
+  transform: translateY(28px) scale(0.96); transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+#wwm-modal-backdrop.open #wwm-modal { transform: translateY(0) scale(1); }
+.wwm-close {
+  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px;
+  background: rgba(255,255,255,0.07); border: 1px solid var(--border2, rgba(255,255,255,.14));
+  border-radius: 50%; color: var(--muted, rgba(238,234,248,.5)); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.wwm-close:hover { background: rgba(255,255,255,0.14); color: #fff; transform: rotate(90deg); }
+.wwm-icon-wrap { width: 52px; height: 52px; border-radius: 15px; background: linear-gradient(135deg, rgba(255,101,132,.22), rgba(108,99,255,.22)); border: 1px solid rgba(255,101,132,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 16px; }
+.wwm-title { font-family: var(--font-d, sans-serif); font-size: 30px; letter-spacing: 2px; line-height: 1; margin-bottom: 6px; color: var(--text, #EEEAF8); }
+.wwm-movie-name { font-size: 13px; color: var(--accent, #6C63FF); font-weight: 500; margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wwm-divider { height: 1px; background: var(--border, rgba(255,255,255,.07)); margin: 0 0 18px; }
+.wwm-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint, rgba(238,234,248,.22)); margin-bottom: 8px; }
+.wwm-link-row { display: flex; align-items: center; gap: 8px; background: var(--bg3, #13132a); border: 1px solid var(--border2, rgba(255,255,255,.14)); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; }
+#wwm-room-link { flex: 1; font-family: var(--font-m, monospace); font-size: 12px; color: var(--accent, #6C63FF); background: none; border: none; outline: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: text; }
+.wwm-copy-btn { background: var(--accent, #6C63FF); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-family: var(--font-b, sans-serif); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
+.wwm-copy-btn:hover { background: #7b72ff; }
+.wwm-copy-btn.copied { background: #22c55e; }
+.wwm-share-note { font-size: 12px; color: var(--muted, rgba(238,234,248,.5)); line-height: 1.65; margin-bottom: 22px; padding: 10px 12px; background: rgba(108,99,255,0.07); border: 1px solid rgba(108,99,255,0.15); border-radius: 10px; }
+.wwm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wwm-action-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 14px; border-radius: 12px; font-family: var(--font-b, sans-serif); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; text-decoration: none; white-space: nowrap; }
+.wwm-action-btn.primary { background: linear-gradient(135deg, #ff6584, #ff3355); color: #fff; box-shadow: 0 6px 20px rgba(255,51,85,.35); }
+.wwm-action-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(255,51,85,.5); }
+.wwm-action-btn.secondary { background: var(--glass, rgba(255,255,255,.055)); color: var(--text, #EEEAF8); border: 1px solid var(--border2, rgba(255,255,255,.14)); }
+.wwm-action-btn.secondary:hover { background: var(--glass-b, rgba(255,255,255,.10)); }
+@media (max-width: 440px) { #wwm-modal { padding: 24px 16px 20px; border-radius: 18px; } .wwm-title { font-size: 24px; } .wwm-actions { grid-template-columns: 1fr; } }
+
+/* 16. WATCH PARTY STATUS BAR (shown after joining a room) */
+#wwm-status-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(12,12,22,0.96); backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(108,99,255,0.35);
+  padding: 10px clamp(16px,4vw,32px);
+  z-index: 1500; display: none; align-items: center;
+  justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  box-shadow: 0 -4px 24px rgba(108,99,255,0.15);
+}
+#wwm-status-bar.active { display: flex; }
+body.has-watch-party { padding-bottom: 72px; }
+.wwm-bar-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34,197,94,0.6); animation: wwmPulse 2s ease-in-out infinite; }
+@keyframes wwmPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); } }
+.wwm-bar-left { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.wwm-bar-room { font-family: var(--font-m, monospace); font-size: 11px; color: var(--faint); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 3px 10px; border-radius: 99px; }
+.wwm-bar-users { font-size: 12px; color: var(--muted); }
+.wwm-bar-right { display: flex; align-items: center; gap: 8px; }
+.wwm-bar-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: var(--font-b, sans-serif); }
+.wwm-bar-btn.copy { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid rgba(255,255,255,0.12); }
+.wwm-bar-btn.copy:hover { background: rgba(255,255,255,0.14); }
+.wwm-bar-btn.leave { background: rgba(255,60,60,0.15); color: #ff8080; border: 1px solid rgba(255,60,60,0.2); }
+.wwm-bar-btn.leave:hover { background: rgba(255,60,60,0.25); }
+@media (max-width: 440px) { .wwm-bar-room { display: none; } }
+
+/* 17. MISC */
+@media (max-width: 700px) { .hype-item { grid-template-columns: 1fr; gap: 10px; } }
+@media (max-width: 860px) {
+  .movie-backdrop-inner { padding: 0 24px 32px; flex-direction: column; gap: 16px; }
+  .movie-poster-large { width: 120px; }
+  .movie-hero-title { font-size: clamp(30px, 8vw, 56px); }
+  .movie-body { grid-template-columns: 1fr; padding: 24px 24px 60px; gap: 24px; }
+}
+@media (max-width: 600px) { .movie-body { padding: 18px 16px 48px; } .movie-hero-btns { flex-direction: column; } }
+.card-action-btn { overflow: visible !important; white-space: nowrap; min-width: 0; font-size: 10px; }
+.card-actions { padding: 0 10px 12px; gap: 5px; }
+
+/* 18. LIGHT MODE */
+body.light #wwm-modal { background: #fff; border-color: var(--border2); }
+body.light .wwm-title, body.light .wwm-movie-name { color: var(--text); }
+body.light .wwm-label, body.light .wwm-share-note { color: var(--muted); }
+body.light .wwm-link-row { background: var(--bg3); }
+body.light .wwm-close { background: rgba(18,18,30,.06); border-color: var(--border2); color: var(--muted); }
+body.light .wwm-action-btn.secondary { background: rgba(18,18,30,.05); border-color: var(--border2); color: var(--text); }
+body.light #wwm-status-bar { background: rgba(242,242,247,0.96); border-top-color: var(--border2); }

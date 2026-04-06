@@ -46,12 +46,14 @@
       });
   
       socket.on('user-joined', ({ userCount: count }) => {
+      window._wpUserCount = count;
         userCount = count;
         updatePartyUI();
         showToast(`👋 Someone joined! (${count} watching)`);
       });
   
       socket.on('user-left', ({ userCount: count }) => {
+      window._wpUserCount = count;
         userCount = count;
         updatePartyUI();
         showToast(`🚪 Someone left. (${count} watching)`);

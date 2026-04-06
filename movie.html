@@ -78,7 +78,7 @@
   <script src="auth.js"></script>
   <script src="script.js"></script>
 
-  <!-- WATCH WITH ME MODAL (same as index) -->
+  <!-- WATCH WITH ME MODAL -->
   <div id="wwm-modal-backdrop" role="dialog" aria-modal="true">
     <div id="wwm-modal">
       <button class="wwm-close" id="wwm-modal-close" title="Close">&#x2715;</button>
@@ -92,7 +92,7 @@
         <button class="wwm-copy-btn" id="wwm-copy-btn">Copy</button>
       </div>
       <div class="wwm-share-note">
-        Share this link with friends so everyone can join and watch together. The room is ready instantly &mdash; no account needed to join.
+        Share this link with friends. They open it on any device and join the same room instantly &mdash; no account needed.
       </div>
       <div class="wwm-actions">
         <button class="wwm-action-btn primary" id="wwm-open-btn">&#x25B6; Open Room</button>
@@ -101,24 +101,35 @@
     </div>
   </div>
 
-  <script>
-  /* Watch With Me — modal logic (shared) */
-  (function () {
-    var backdrop = document.getElementById('wwm-modal-backdrop');
-    var closeBtn = document.getElementById('wwm-modal-close');
-    var movieNameEl = document.getElementById('wwm-movie-name');
-    var roomLinkEl = document.getElementById('wwm-room-link');
-    var copyBtn = document.getElementById('wwm-copy-btn');
-    var openBtn = document.getElementById('wwm-open-btn');
-    var shareBtn = document.getElementById('wwm-share-btn');
+  <!-- WATCH PARTY STATUS BAR (shown when inside a room) -->
+  <div id="wwm-status-bar">
+    <div class="wwm-bar-left">
+      <div class="wwm-bar-dot"></div>
+      <span style="font-weight:600;font-size:13px;color:var(--text)">Watch Party</span>
+      <span class="wwm-bar-room" id="wwm-bar-room-id"></span>
+      <span class="wwm-bar-users" id="wwm-bar-users">&#x1F465; 1 watching</span>
+    </div>
+    <div class="wwm-bar-right">
+      <button class="wwm-bar-btn copy" id="wwm-bar-copy">&#x1F517; Copy Link</button>
+      <button class="wwm-bar-btn leave" id="wwm-bar-leave">Leave</button>
+    </div>
+  </div>
 
+  <script>
+  /* ============================================================
+     WATCH WITH ME — Full Logic (modal + room + status bar)
+  ============================================================ */
+  (function () {
+    /* --- helpers --- */
     function genRoomId() {
-      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       var id = '';
-      for (var i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      for (var i = 0; i < 8; i++) id += c[Math.floor(Math.random() * c.length)];
       return id;
     }
-
+    function getRoomFromURL() {
+      return new URLSearchParams(window.location.search).get('room');
+    }
     function buildRoomLink(roomId) {
       var url = new URL(window.location.href);
       url.searchParams.set('room', roomId);
@@ -126,6 +137,23 @@
       return url.toString();
     }
 
+    /* --- modal elements --- */
+    var backdrop    = document.getElementById('wwm-modal-backdrop');
+    var closeBtn    = document.getElementById('wwm-modal-close');
+    var movieNameEl = document.getElementById('wwm-movie-name');
+    var roomLinkEl  = document.getElementById('wwm-room-link');
+    var copyBtn     = document.getElementById('wwm-copy-btn');
+    var openBtn     = document.getElementById('wwm-open-btn');
+    var shareBtn    = document.getElementById('wwm-share-btn');
+
+    /* --- status bar elements --- */
+    var statusBar    = document.getElementById('wwm-status-bar');
+    var barRoomId    = document.getElementById('wwm-bar-room-id');
+    var barUsers     = document.getElementById('wwm-bar-users');
+    var barCopyBtn   = document.getElementById('wwm-bar-copy');
+    var barLeaveBtn  = document.getElementById('wwm-bar-leave');
+
+    /* --- open modal --- */
     function openWWM(title) {
       var roomId = genRoomId();
       var link = buildRoomLink(roomId);
@@ -135,59 +163,96 @@
       document.body.style.overflow = 'hidden';
     }
 
+    /* --- close modal --- */
     function closeWWM() {
       if (backdrop) backdrop.classList.remove('open');
       document.body.style.overflow = '';
     }
 
     window.openWatchWithMe = openWWM;
-
     if (closeBtn) closeBtn.addEventListener('click', closeWWM);
-    if (backdrop) backdrop.addEventListener('click', function (e) {
-      if (e.target === backdrop) closeWWM();
-    });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWWM(); });
+    if (backdrop) backdrop.addEventListener('click', function(e) { if (e.target === backdrop) closeWWM(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeWWM(); });
 
+    /* --- copy link inside modal --- */
     if (copyBtn) {
-      copyBtn.addEventListener('click', function () {
+      copyBtn.addEventListener('click', function() {
         var val = roomLinkEl ? roomLinkEl.value : '';
         if (!val) return;
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(val).then(function () {
-            copyBtn.textContent = 'Copied!'; copyBtn.classList.add('copied');
-            setTimeout(function () { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2200);
-          });
-        } else {
-          roomLinkEl.select(); document.execCommand('copy');
-          copyBtn.textContent = 'Copied!';
-          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2200);
-        }
+        function done() { copyBtn.textContent = 'Copied!'; copyBtn.classList.add('copied'); setTimeout(function() { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2200); }
+        if (navigator.clipboard) { navigator.clipboard.writeText(val).then(done); }
+        else { try { roomLinkEl.select(); document.execCommand('copy'); done(); } catch(e){} }
       });
     }
 
+    /* --- Open Room button: navigates INTO the room (same tab) ---
+         watch-party.js will detect ?room= in URL and connect socket */
     if (openBtn) {
-      openBtn.addEventListener('click', function () {
+      openBtn.addEventListener('click', function() {
         var link = roomLinkEl ? roomLinkEl.value : '';
-        if (link) window.location.href = link;
+        if (!link) return;
+        /* navigate — watch-party.js picks up ?room= on load */
+        window.location.href = link;
       });
     }
 
+    /* --- Share button --- */
     if (shareBtn) {
-      shareBtn.addEventListener('click', function () {
+      shareBtn.addEventListener('click', function() {
         var link = roomLinkEl ? roomLinkEl.value : '';
         var title = movieNameEl ? movieNameEl.textContent : 'a movie';
         if (navigator.share) {
-          navigator.share({ title: 'Watch ' + title + ' with me!', url: link }).catch(function(){});
+          navigator.share({ title: 'Watch ' + title + ' with me on Trailer Hub!', url: link }).catch(function(){});
         } else {
           if (navigator.clipboard) navigator.clipboard.writeText(link);
-          shareBtn.innerHTML = '&#x2713; Link Copied';
-          setTimeout(function () { shareBtn.innerHTML = '&#x2197; Share Link'; }, 2200);
+          shareBtn.innerHTML = '&#x2713; Copied!';
+          setTimeout(function() { shareBtn.innerHTML = '&#x2197; Share Link'; }, 2200);
         }
       });
     }
+
+    /* --- Status bar: show if we are already in a room --- */
+    var currentRoom = getRoomFromURL();
+    if (currentRoom && statusBar) {
+      statusBar.classList.add('active');
+      document.body.classList.add('has-watch-party');
+      if (barRoomId) barRoomId.textContent = 'Room: ' + currentRoom;
+    }
+
+    if (barCopyBtn) {
+      barCopyBtn.addEventListener('click', function() {
+        var link = window.location.href;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(link).then(function() {
+            barCopyBtn.textContent = 'Copied!';
+            setTimeout(function() { barCopyBtn.innerHTML = '&#x1F517; Copy Link'; }, 2000);
+          });
+        }
+      });
+    }
+    if (barLeaveBtn) {
+      barLeaveBtn.addEventListener('click', function() {
+        /* Remove ?room param and navigate away */
+        var url = new URL(window.location.href);
+        url.searchParams.delete('room');
+        window.location.href = url.toString();
+      });
+    }
+
+    /* Update user count from WatchParty if available */
+    function updateBarUsers() {
+      if (window.WatchParty && barUsers) {
+        /* WatchParty exposes userCount via event or we poll */
+        var count = window._wpUserCount || 1;
+        barUsers.textContent = '\u1F465 ' + count + ' watching';
+      }
+    }
+    setInterval(updateBarUsers, 3000);
   })();
 
-  /* Fullscreen for inline player */
+  /* ============================================================
+     INLINE PLAYER FULLSCREEN
+  ============================================================ */
   (function () {
     function inject() {
       var actions = document.getElementById('inline-player-actions');
@@ -208,11 +273,11 @@
     }
     var wrap = document.getElementById('inline-player-wrap');
     if (wrap) {
-      new MutationObserver(function () {
+      new MutationObserver(function() {
         if (wrap.classList.contains('open') || wrap.style.display !== 'none') inject();
       }).observe(wrap, { attributes: true, attributeFilter: ['class','style'] });
     }
-    document.addEventListener('fullscreenchange', function () {
+    document.addEventListener('fullscreenchange', function() {
       var btn = document.getElementById('inline-player-fullscreen-btn');
       if (btn) btn.textContent = document.fullscreenElement ? '\u2715 Exit Full' : '\u26F6 Fullscreen';
     });

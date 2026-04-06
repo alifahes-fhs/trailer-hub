@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Movie — Trailer Hub</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="responsive-fixes.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6C63FF">
 </head>
@@ -76,5 +77,146 @@
 
   <script src="auth.js"></script>
   <script src="script.js"></script>
+
+  <!-- WATCH WITH ME MODAL (same as index) -->
+  <div id="wwm-modal-backdrop" role="dialog" aria-modal="true">
+    <div id="wwm-modal">
+      <button class="wwm-close" id="wwm-modal-close" title="Close">&#x2715;</button>
+      <div class="wwm-icon-wrap">&#x1F3AC;</div>
+      <div class="wwm-title">WATCH WITH ME</div>
+      <div class="wwm-movie-name" id="wwm-movie-name">Movie Title</div>
+      <div class="wwm-divider"></div>
+      <div class="wwm-label">Your Room Link</div>
+      <div class="wwm-link-row">
+        <input type="text" id="wwm-room-link" readonly aria-label="Room link">
+        <button class="wwm-copy-btn" id="wwm-copy-btn">Copy</button>
+      </div>
+      <div class="wwm-share-note">
+        Share this link with friends so everyone can join and watch together. The room is ready instantly &mdash; no account needed to join.
+      </div>
+      <div class="wwm-actions">
+        <button class="wwm-action-btn primary" id="wwm-open-btn">&#x25B6; Open Room</button>
+        <button class="wwm-action-btn secondary" id="wwm-share-btn">&#x2197; Share Link</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* Watch With Me — modal logic (shared) */
+  (function () {
+    var backdrop = document.getElementById('wwm-modal-backdrop');
+    var closeBtn = document.getElementById('wwm-modal-close');
+    var movieNameEl = document.getElementById('wwm-movie-name');
+    var roomLinkEl = document.getElementById('wwm-room-link');
+    var copyBtn = document.getElementById('wwm-copy-btn');
+    var openBtn = document.getElementById('wwm-open-btn');
+    var shareBtn = document.getElementById('wwm-share-btn');
+
+    function genRoomId() {
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var id = '';
+      for (var i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      return id;
+    }
+
+    function buildRoomLink(roomId) {
+      var url = new URL(window.location.href);
+      url.searchParams.set('room', roomId);
+      url.hash = '';
+      return url.toString();
+    }
+
+    function openWWM(title) {
+      var roomId = genRoomId();
+      var link = buildRoomLink(roomId);
+      if (movieNameEl) movieNameEl.textContent = title || 'This Movie';
+      if (roomLinkEl)  roomLinkEl.value = link;
+      if (backdrop)    backdrop.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeWWM() {
+      if (backdrop) backdrop.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    window.openWatchWithMe = openWWM;
+
+    if (closeBtn) closeBtn.addEventListener('click', closeWWM);
+    if (backdrop) backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) closeWWM();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeWWM(); });
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        var val = roomLinkEl ? roomLinkEl.value : '';
+        if (!val) return;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(val).then(function () {
+            copyBtn.textContent = 'Copied!'; copyBtn.classList.add('copied');
+            setTimeout(function () { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2200);
+          });
+        } else {
+          roomLinkEl.select(); document.execCommand('copy');
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2200);
+        }
+      });
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener('click', function () {
+        var link = roomLinkEl ? roomLinkEl.value : '';
+        if (link) window.location.href = link;
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () {
+        var link = roomLinkEl ? roomLinkEl.value : '';
+        var title = movieNameEl ? movieNameEl.textContent : 'a movie';
+        if (navigator.share) {
+          navigator.share({ title: 'Watch ' + title + ' with me!', url: link }).catch(function(){});
+        } else {
+          if (navigator.clipboard) navigator.clipboard.writeText(link);
+          shareBtn.innerHTML = '&#x2713; Link Copied';
+          setTimeout(function () { shareBtn.innerHTML = '&#x2197; Share Link'; }, 2200);
+        }
+      });
+    }
+  })();
+
+  /* Fullscreen for inline player */
+  (function () {
+    function inject() {
+      var actions = document.getElementById('inline-player-actions');
+      if (!actions || document.getElementById('inline-player-fullscreen-btn')) return;
+      var btn = document.createElement('button');
+      btn.id = 'inline-player-fullscreen-btn';
+      btn.textContent = '\u26F6 Fullscreen';
+      btn.addEventListener('click', function () {
+        var target = document.getElementById('inline-player-wrap') || document.getElementById('inline-player-video');
+        if (!target) return;
+        if (document.fullscreenElement) {
+          document.exitFullscreen && document.exitFullscreen();
+        } else {
+          (target.requestFullscreen || target.webkitRequestFullscreen || function(){}).call(target);
+        }
+      });
+      actions.appendChild(btn);
+    }
+    var wrap = document.getElementById('inline-player-wrap');
+    if (wrap) {
+      new MutationObserver(function () {
+        if (wrap.classList.contains('open') || wrap.style.display !== 'none') inject();
+      }).observe(wrap, { attributes: true, attributeFilter: ['class','style'] });
+    }
+    document.addEventListener('fullscreenchange', function () {
+      var btn = document.getElementById('inline-player-fullscreen-btn');
+      if (btn) btn.textContent = document.fullscreenElement ? '\u2715 Exit Full' : '\u26F6 Fullscreen';
+    });
+  })();
+  </script>
 </body>
 </html>

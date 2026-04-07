@@ -2740,8 +2740,8 @@ footer { padding: 24px clamp(16px, 4vw, 48px); flex-wrap: wrap; gap: 12px; }
 /* Grid containers must not clip */
 #results-grid, .skeleton-grid, #tonight-row, #similar-grid { overflow: visible !important; }
 
-@media (max-width: 600px) {
-  #results-grid, #similar-grid {
+@media (max-width: 1200px) {
+  #results-grid, #similar-grid, #tonight-row {
     display: flex !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
@@ -2751,7 +2751,7 @@ footer { padding: 24px clamp(16px, 4vw, 48px); flex-wrap: wrap; gap: 12px; }
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
   }
-  #results-grid .movie-card, #similar-grid .movie-card {
+  #results-grid .movie-card, #similar-grid .movie-card, #tonight-row .movie-card {
     min-width: 220px !important;
     max-width: 220px !important;
     flex: 0 0 auto !important;

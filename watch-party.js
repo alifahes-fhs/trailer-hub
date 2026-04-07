@@ -26,15 +26,40 @@
       return new URLSearchParams(window.location.search).get('room');
     }
   
+    function ensureSocketIo(callback) {
+      if (window.io) return callback();
+      const script = document.createElement('script');
+      script.src = 'https://cdn.socket.io/4.6.1/socket.io.min.js';
+      script.onload = callback;
+      script.onerror = function () {
+        console.error('[WatchParty] Socket.io client failed to load');
+        showToast('Watch Party unavailable: could not load Socket.io');
+      };
+      document.head.appendChild(script);
+    }
+  
     /* ================================================================
        SOCKET SETUP
     ================================================================ */
     function connectSocket(roomId) {
+      if (!window.io) {
+        console.warn('[WatchParty] io is not available yet, retrying...');
+        return ensureSocketIo(() => connectSocket(roomId));
+      }
+
       socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
   
       socket.on('connect', () => {
         console.log('[WatchParty] Connected:', socket.id);
         socket.emit('join-room', { roomId });
+      });
+      socket.on('connect_error', (err) => {
+        console.error('[WatchParty] connect_error', err);
+        showToast('Watch Party failed to connect. Check your network.');
+      });
+      socket.on('error', (err) => {
+        console.error('[WatchParty] socket error', err);
+        showToast('Watch Party connection error.');
       });
   
       socket.on('room-state', (state) => {

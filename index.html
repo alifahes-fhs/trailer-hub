@@ -249,8 +249,8 @@
       border: none; border-radius: 16px;
     }
   </style>  <script src="auth.js"></script>
-  <!-- Socket.io client — served by your Watch Party server -->
-  <script src="https://trailer-hub-production.up.railway.app/socket.io/socket.io.js" onerror="console.warn('Watch Party server not running')"></script>
+  <!-- Socket.io client — CDN fallback for reliable mobile support -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" onerror="console.warn('Socket.io client failed to load')"></script>
   <script src="script.js"></script>
   <script src="watch-party.js"></script>
 

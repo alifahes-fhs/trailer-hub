@@ -1407,6 +1407,9 @@
                  ${inWLat ? '✓ Watch Later' : '+ Watch Later'}
                </button>
              </div>
+             <div id="detail-watchparty-note" class="detail-watchparty-note">
+               <strong>Watch Party active:</strong> click <em>Watch Trailer</em> to sync playback with your room.
+             </div>
              <div class="detail-stats">
                <div class="detail-stat"><div class="detail-stat-label">Status</div><div class="detail-stat-value">${status}</div></div>
                <div class="detail-stat"><div class="detail-stat-label">Language</div><div class="detail-stat-value">${lang}</div></div>
@@ -1419,6 +1422,11 @@
        </div>`;
    
      $('detail-trailer-btn')?.addEventListener('click', async () => {
+       if (window.WatchParty?.isInRoom()) {
+         await playDetailTrailerWithWatchParty(d, type);
+         return;
+       }
+
        let wrap = document.getElementById('detail-trailer-container');
        if (!wrap) {
          // Create a trailer container right after the actions div
@@ -1461,6 +1469,81 @@
          $('detail-trailer-btn').textContent = '▶ Watch Trailer';
        }
      });
+
+     async function playDetailTrailerWithWatchParty(detail, type) {
+       let wrap = document.getElementById('detail-trailer-container');
+       if (!wrap) {
+         wrap = document.createElement('div');
+         wrap.id = 'detail-trailer-container';
+         const actionsDiv = $('detail-trailer-btn')?.closest('.detail-actions');
+         actionsDiv?.insertAdjacentElement('afterend', wrap);
+       }
+       if (wrap.classList.contains('active')) {
+         wrap.classList.remove('active');
+         wrap.innerHTML = '';
+         $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+         return;
+       }
+
+       wrap.classList.add('active');
+       $('detail-trailer-btn').textContent = '⏳ Loading…';
+       wrap.style.cssText = 'position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;margin-top:20px;';
+       wrap.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;border-radius:16px"><div style="width:36px;height:36px;border:3px solid #6C63FF;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div></div>`;
+
+       try {
+         const videoUrl = type === 'tv'
+           ? `${BASE_URL}/tv/${detail.id}/videos?api_key=${API_KEY}`
+           : `${BASE_URL}/movie/${detail.id}/videos?api_key=${API_KEY}`;
+         const res = await fetch(videoUrl);
+         const data = await res.json();
+         const vids = data.results || [];
+         const clip = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
+           || vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+           || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
+           || vids.find(v => v.site === 'YouTube');
+
+         if (!clip) {
+           wrap.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--faint);flex-direction:column;gap:8px;border-radius:16px"><span style="font-size:32px">🎬</span><p style="font-size:13px">No trailer available</p></div>`;
+           $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+           return;
+         }
+
+         wrap.innerHTML = '';
+         const playerDiv = document.createElement('div');
+         playerDiv.id = `yt-detail-player-${detail.id}-${Date.now()}`;
+         playerDiv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+         wrap.appendChild(playerDiv);
+
+         const closeBtn = document.createElement('button');
+         closeBtn.innerHTML = '✕';
+         closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1000;background:rgba(0,0,0,0.72);color:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+         closeBtn.onclick = (e) => {
+           e.stopPropagation();
+           wrap.classList.remove('active');
+           wrap.innerHTML = '';
+           $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+         };
+         wrap.appendChild(closeBtn);
+
+         loadYTApiIfNeeded(() => {
+           new YT.Player(playerDiv.id, {
+             videoId: clip.key,
+             playerVars: { autoplay: 1, rel: 0, modestbranding: 1 },
+             events: {
+               onReady: (event) => {
+                 window.WatchParty?.hookPlayer(event.target, clip.key);
+                 $('detail-trailer-btn').textContent = '✕ Close Trailer';
+               }
+             }
+           });
+         });
+       } catch (error) {
+         wrap.classList.remove('active');
+         wrap.innerHTML = '';
+         $('detail-trailer-btn').textContent = '▶ Watch Trailer';
+         wrap.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);color:var(--faint);flex-direction:column;gap:8px;border-radius:16px"><span style="font-size:32px">⚠️</span><p style="font-size:13px">${error.message}</p></div>`;
+       }
+     }
      
      $('detail-wl-btn')?.addEventListener('click', () => {
        toggleList('watchlist', storeItem);
@@ -1479,6 +1562,11 @@
        btn.textContent = added ? '✓ Watch Later' : '+ Watch Later';
        updateBadges();
      });
+   
+     const note = $('detail-watchparty-note');
+     if (note) {
+       note.style.display = window.WatchParty?.isInRoom() ? 'block' : 'none';
+     }
    
      addRecentlyViewed(storeItem);
    }

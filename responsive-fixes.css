@@ -1,0 +1,31 @@
+/* Responsive fixes and scroll behavior for Trailer Hub */
+
+html, body {
+  overflow-x: hidden;
+}
+
+@media (max-width: 1600px) {
+  #results-grid,
+  #similar-grid,
+  #tonight-row,
+  #recently-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    gap: 14px !important;
+    padding-bottom: 14px !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #results-grid .movie-card,
+  #similar-grid .movie-card,
+  #tonight-row .movie-card,
+  #recently-row .trending-card {
+    min-width: 220px !important;
+    max-width: 220px !important;
+    flex: 0 0 auto !important;
+    scroll-snap-align: start !important;
+  }
+}

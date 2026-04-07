@@ -2739,6 +2739,26 @@ footer { padding: 24px clamp(16px, 4vw, 48px); flex-wrap: wrap; gap: 12px; }
 .card-info { overflow: hidden; }
 /* Grid containers must not clip */
 #results-grid, .skeleton-grid, #tonight-row, #similar-grid { overflow: visible !important; }
+
+@media (max-width: 600px) {
+  #results-grid, #similar-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    gap: 14px !important;
+    padding-bottom: 14px !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  #results-grid .movie-card, #similar-grid .movie-card {
+    min-width: 220px !important;
+    max-width: 220px !important;
+    flex: 0 0 auto !important;
+    scroll-snap-align: start !important;
+  }
+}
+
 .card-overlay { z-index: 3; }
 .card-rating { z-index: 4; }
 

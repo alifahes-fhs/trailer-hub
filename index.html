@@ -20,7 +20,10 @@
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
         Watchlist <span class="nav-badge zero" id="watchlist-count">0</span>
       </button>
-    
+      <button class="nav-list-btn" id="nav-watchlater-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Watch Later <span class="nav-badge zero" id="watchlater-count">0</span>
+      </button>
       <button class="theme-toggle" id="theme-toggle" title="Toggle theme"><span class="theme-icon">☀</span></button>
       <a href="contact.html" class="btn-pill">Contact</a>
     </nav>
@@ -199,7 +202,7 @@
       <div class="panel-header">
         <div class="panel-tabs">
           <button class="panel-tab active" id="tab-watchlist">Watchlist</button>
-        
+          <button class="panel-tab" id="tab-watchlater">Watch Later</button>
         </div>
         <button class="modal-close" id="panel-close">✕</button>
       </div>
@@ -466,7 +469,6 @@
     setInterval(inject, 1800);
     window.addEventListener('load', inject);
   })();
-
   </script>
 </body>
 </html>

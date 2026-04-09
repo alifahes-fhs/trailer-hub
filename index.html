@@ -297,23 +297,35 @@
       return id;
     }
 
-    function buildRoomLink(roomId) {
-      /* Use the current page but add ?room=XXXX — same as watch-party.js convention */
-      var url = new URL(window.location.href);
+   function buildRoomLink(roomId, movieId, type) {
+      var url;
+      if (movieId) {
+        // Force the link to point to movie.html so both users have a dedicated player
+        var basePath = window.location.pathname.replace('index.html', '');
+        url = new URL('movie.html', window.location.origin + basePath);
+        url.searchParams.set('id', movieId);
+        url.searchParams.set('type', type || 'movie');
+      } else {
+        url = new URL(window.location.href);
+      }
       url.searchParams.set('room', roomId);
-      /* Remove any hash so the URL is clean */
       url.hash = '';
       return url.toString();
     }
 
-    function openWWM(title) {
+    // Accept movieId and type
+    function openWWM(title, movieId, type) {
       var roomId = genRoomId();
-      var link = buildRoomLink(roomId);
+      var link = buildRoomLink(roomId, movieId, type);
       if (movieNameEl) movieNameEl.textContent = title || 'This Movie';
       if (roomLinkEl)  roomLinkEl.value = link;
       if (backdrop)    backdrop.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
+
+    /* Expose so card buttons can call it */
+    window.openWatchWithMe = openWWM;
+
 
     function closeWWM() {
       if (backdrop) backdrop.classList.remove('open');
@@ -411,25 +423,40 @@
     });
   })();
 
-  /* ============================================================
+/* ============================================================
      CARD INJECTOR — adds "Watch With Me" button to every card overlay
   ============================================================ */
   (function () {
     function inject() {
-      document.querySelectorAll('.card-overlay').forEach(function (overlay) {
+      document.querySelectorAll('.card-overlay, .trending-info').forEach(function (overlay) {
         if (overlay.querySelector('.watch-with-me-btn')) return;
-        var card = overlay.closest('.movie-card');
+        var card = overlay.closest('.movie-card') || overlay.closest('.trending-card');
         if (!card) return;
-        var titleEl = card.querySelector('.card-title');
+        
+        var titleEl = card.querySelector('.card-title') || card.querySelector('.trending-title');
         var title = titleEl ? titleEl.textContent.trim() : 'This Movie';
+        
+        // Grab the specific movie ID and Type
+        var movieId = card.getAttribute('data-id');
+        var type = card.getAttribute('data-type') || 'movie';
+
         var btn = document.createElement('button');
         btn.className = 'watch-with-me-btn';
         btn.innerHTML = '&#x1F465; Watch With Me';
         btn.addEventListener('click', function (e) {
           e.stopPropagation();
-          if (window.openWatchWithMe) window.openWatchWithMe(title);
+          e.preventDefault();
+          if (window.openWatchWithMe) window.openWatchWithMe(title, movieId, type);
         });
-        overlay.appendChild(btn);
+        
+        if (overlay.classList.contains('card-overlay')) {
+           overlay.appendChild(btn);
+        } else {
+           // Insert it before the platform tags on trending cards
+           var tags = overlay.querySelector('.platform-tags');
+           if (tags) overlay.insertBefore(btn, tags.nextSibling);
+           else overlay.appendChild(btn);
+        }
       });
     }
 
@@ -439,10 +466,10 @@
       new MutationObserver(inject).observe(el, { childList: true, subtree: true });
     });
 
-    /* Poll as safety net */
     setInterval(inject, 1800);
     window.addEventListener('load', inject);
   })();
+  
   </script>
 </body>
 </html>

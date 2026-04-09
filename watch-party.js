@@ -62,11 +62,22 @@
         showToast('Watch Party connection error.');
       });
   
-      socket.on('room-state', (state) => {
+     socket.on('room-state', (state) => {
         userCount = state.userCount || 1;
         updatePartyUI();
-        if (state.videoId && ytPlayer?.loadVideoById) {
-          loadAndSync(state);
+        
+        // If the player is already hooked up, sync it immediately
+        if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
+          if (state.currentTime !== undefined) {
+             isSyncing = true;
+             ytPlayer.seekTo(state.currentTime, true);
+             if (state.playing) ytPlayer.playVideo();
+             else ytPlayer.pauseVideo();
+             setTimeout(() => { isSyncing = false; }, 800);
+          }
+        } else {
+          // Player isn't ready yet (page just loaded). Save the state to apply it the second the player hooks up.
+          window._wpInitialState = state;
         }
       });
   
@@ -181,7 +192,20 @@
         }
         lastKnownTime = t;
       }, 1000);
+// --- ADD THIS: Apply saved state for late-joiners instantly ---
+      if (window._wpInitialState) {
+        const state = window._wpInitialState;
+        setTimeout(() => {
+          isSyncing = true;
+          if (state.currentTime) player.seekTo(state.currentTime, true);
+          if (state.playing) player.playVideo();
+          setTimeout(() => { isSyncing = false; }, 800);
+        }, 500); // Small buffer for YT iframe to settle
+        window._wpInitialState = null;
+      }
     }
+
+    
   
     /* ================================================================
        EMOJI REACTIONS
@@ -502,6 +526,9 @@
     /* ================================================================
        BOOT
     ================================================================ */
+/* ================================================================
+       BOOT
+    ================================================================ */
     function init() {
       const roomId = getRoomFromURL();
       injectCreateBtnStyles();
@@ -510,8 +537,15 @@
         currentRoomId = roomId;
         connectSocket(roomId);
         buildPartyBar();
+
+        // Auto-open the trailer so the guest doesn't have to click anything
+        setTimeout(() => {
+          const trailerBtn = document.getElementById('detail-trailer-btn');
+          if (trailerBtn && !trailerBtn.textContent.includes('Close') && !trailerBtn.textContent.includes('Loading')) {
+             trailerBtn.click();
+          }
+        }, 1200); // Give script.js time to fetch details
       } else {
-        /* No room → inject "Watch With Me" into player when it opens */
         injectCreateRoomButton();
       }
     }

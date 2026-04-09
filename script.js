@@ -457,15 +457,15 @@
        e.currentTarget.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>${saved ? 'Saved' : 'Watchlist'}`;
      });
    
-     card.querySelector('.wlat-btn').addEventListener('click', e => {
-       e.stopPropagation();
-      
-       updateBadges();
-      
-       e.currentTarget.classList.toggle('saved', added);
-       e.currentTarget.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
-       e.currentTarget.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
-     });
+    card.querySelector('.wlat-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      toggleList('watchlater', storeItem);
+      updateBadges();
+      const wlatSaved = storage.has('watchlater', item.id);
+      e.currentTarget.classList.toggle('saved', wlatSaved);
+      e.currentTarget.style.background = wlatSaved ? 'var(--accent-dim)' : 'var(--glass)';
+      e.currentTarget.innerHTML = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' + (wlatSaved ? 'Saved' : 'Later');
+    });
    
      const infoBtn = card.querySelector('.detail-btn');
      infoBtn.addEventListener('click', e => {
@@ -933,7 +933,6 @@ function updateBadges() {
      try {
        const res = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
        const data = await res.json();
-       renderTrending(data.results);
        const items = data.results || [];
        row.innerHTML = '';
    
@@ -943,7 +942,7 @@ function updateBadges() {
          const year = (item.release_date || item.first_air_date || '').slice(0, 4);
          const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
          const inWL = storage.has('watchlist', item.id);
-        
+         const inWLat = storage.has('watchlater', item.id);
          
          const card = document.createElement('div');
          card.className = 'trending-card';
@@ -953,6 +952,7 @@ function updateBadges() {
          card.style.overflow = 'hidden';
          card.style.border = '1px solid var(--border)';
          card.style.transition = 'transform 0.3s, border-color 0.2s';
+         card.style.position = 'relative';
          card.setAttribute('data-id', item.id);
          card.setAttribute('data-type', mediaType);
          
@@ -1005,12 +1005,12 @@ function updateBadges() {
          
          card.querySelector('.trending-wlat-btn').addEventListener('click', (e) => {
            e.stopPropagation();
-           
+           toggleList('watchlater', storeItem);
            updateBadges();
-         
+           const saved = storage.has('watchlater', item.id);
            const btn = card.querySelector('.trending-wlat-btn');
-           btn.classList.toggle('saved', added);
-           btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
+           btn.classList.toggle('saved', saved);
+           btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${saved ? 'Saved' : 'Later'}`;
          });
          
          card.querySelector('.trending-detail-btn').addEventListener('click', (e) => {
@@ -1374,7 +1374,7 @@ function updateBadges() {
      }
    }
    
-   function renderDetail(d, credits, type) {
+   function renderDetail(d, credits, type, videoId) {
      const title = d.title || d.name || 'Unknown';
      const year = (d.release_date || d.first_air_date || '').slice(0, 4);
      const runtime = d.runtime ? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m` : (d.episode_run_time?.[0] ? `${d.episode_run_time[0]}m/ep` : '');
@@ -1384,8 +1384,7 @@ function updateBadges() {
      const director = (credits.crew || []).find(c => c.job === 'Director');
      const cast = (credits.cast || []).slice(0, 12);
      const inWL = storage.has('watchlist', d.id);
-  const isInWatchlist = isMovieInList(detail.id, 'watchlist');
-const isInWatchLater = isMovieInList(detail.id, 'watchlater');
+  const inWLat = storage.has('watchlater', d.id);
      const budget = d.budget ? `$${(d.budget / 1e6).toFixed(0)}M` : '—';
      const revenue = d.revenue ? `$${(d.revenue / 1e6).toFixed(0)}M` : '—';
      const status = d.status || '—';
@@ -1582,13 +1581,14 @@ const isInWatchLater = isMovieInList(detail.id, 'watchlater');
        updateBadges();
      });
      
-     $('detail-wlat-btn')?.addEventListener('click', () => {
-       
-       const btn = $('detail-wlat-btn');
-       btn.classList.toggle('saved', added);
-       btn.textContent = added ? '✓ Watch Later' : '+ Watch Later';
-       updateBadges();
-     });
+      $('detail-wlat-btn')?.addEventListener('click', () => {
+        toggleList('watchlater', storeItem);
+        const wlatSaved2 = storage.has('watchlater', d.id);
+        const btn = $('detail-wlat-btn');
+        btn.classList.toggle('saved', wlatSaved2);
+        btn.textContent = wlatSaved2 ? '\u2713 Watch Later' : '+ Watch Later';
+        updateBadges();
+      });
    
      const note = $('detail-watchparty-note');
      if (note) {
@@ -1609,25 +1609,18 @@ const isInWatchLater = isMovieInList(detail.id, 'watchlater');
        const grid = $('similar-grid');
        if (section && grid && items.length) {
          section.style.display = 'block';
-         grid.innerHTML = '';
-         items.forEach(item => {
-           const card = document.createElement('div');
-           card.className = 'similar-card';
-           card.innerHTML = `
-             <img src="${IMG_300}${item.poster_path}" alt="${item.title || item.name}">
-             <div class="similar-title">${item.title || item.name}</div>
-             <div class="similar-year">${(item.release_date || item.first_air_date || '').slice(0, 4)}</div>
-           `;
-           card.addEventListener('click', () => {
-             window.location.href = `movie.html?id=${item.id}&type=${item.media_type || type}`;
-           });
-           grid.appendChild(card);
-         });
-       }
+        grid.innerHTML = '';
+        items.forEach((item, idx) => buildCard(item, idx, grid, item.media_type || type));
        section.querySelectorAll('[data-reveal]').forEach(el => revealObs.observe(el));
-     } catch {}
+     }
+     } catch {
+
+        console.error('Error loading similar items:', err);
+     }
    }
+  
    
+
    /* ================================================================
       HELPER FUNCTIONS
    ================================================================ */

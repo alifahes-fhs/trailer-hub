@@ -390,7 +390,7 @@
      const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
      const overview = item.overview || 'No description available.';
      const inWL = storage.has('watchlist', item.id);
-     const inWLat = storage.has('watchlater', item.id);
+    
      const userRating = getUserRating(item.id);
    
      const card = document.createElement('div');
@@ -458,9 +458,9 @@
    
      card.querySelector('.wlat-btn').addEventListener('click', e => {
        e.stopPropagation();
-       toggleList('watchlater', storeItem);
+      
        updateBadges();
-       const added = storage.has('watchlater', item.id);
+      
        e.currentTarget.classList.toggle('saved', added);
        e.currentTarget.style.background = added ? 'var(--accent-dim)' : 'var(--glass)';
        e.currentTarget.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
@@ -862,20 +862,17 @@
      }
      storage.has(key, item.id) ? storage.remove(key, item.id) : storage.add(key, item);
    }
-   
-   function updateBadges() {
-     ['watchlist', 'watchlater'].forEach(key => {
-       const count = storage.get(key).length;
-       const el = $(key === 'watchlist' ? 'watchlist-count' : 'watchlater-count');
-       if (el) {
-         el.textContent = count;
-         el.classList.toggle('zero', count === 0);
-       }
-     });
-   }
+function updateBadges() {
+  const count = storage.get('watchlist').length;
+  const el = $('watchlist-count');
+  if (el) {
+    el.textContent = count;
+    el.classList.toggle('zero', count === 0);
+  }
+}
    
    document.querySelectorAll('#nav-watchlist-btn').forEach(b => b.addEventListener('click', () => openPanel('watchlist')));
-   document.querySelectorAll('#nav-watchlater-btn').forEach(b => b.addEventListener('click', () => openPanel('watchlater')));
+
    document.querySelectorAll('#panel-close').forEach(b => b.addEventListener('click', closePanel));
    document.querySelectorAll('#list-panel').forEach(el => el.addEventListener('click', e => { if (e.target === el) closePanel(); }));
    
@@ -944,7 +941,7 @@
          const year = (item.release_date || item.first_air_date || '').slice(0, 4);
          const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
          const inWL = storage.has('watchlist', item.id);
-         const inWLat = storage.has('watchlater', item.id);
+        
          
          const card = document.createElement('div');
          card.className = 'trending-card';
@@ -1006,9 +1003,9 @@
          
          card.querySelector('.trending-wlat-btn').addEventListener('click', (e) => {
            e.stopPropagation();
-           toggleList('watchlater', storeItem);
+           
            updateBadges();
-           const added = storage.has('watchlater', item.id);
+         
            const btn = card.querySelector('.trending-wlat-btn');
            btn.classList.toggle('saved', added);
            btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>${added ? 'Later' : 'Later'}`;
@@ -1357,7 +1354,7 @@
      const director = (credits.crew || []).find(c => c.job === 'Director');
      const cast = (credits.cast || []).slice(0, 12);
      const inWL = storage.has('watchlist', d.id);
-     const inWLat = storage.has('watchlater', d.id);
+  
      const budget = d.budget ? `$${(d.budget / 1e6).toFixed(0)}M` : '—';
      const revenue = d.revenue ? `$${(d.revenue / 1e6).toFixed(0)}M` : '—';
      const status = d.status || '—';
@@ -1555,8 +1552,7 @@
      });
      
      $('detail-wlat-btn')?.addEventListener('click', () => {
-       toggleList('watchlater', storeItem);
-       const added = storage.has('watchlater', d.id);
+       
        const btn = $('detail-wlat-btn');
        btn.classList.toggle('saved', added);
        btn.textContent = added ? '✓ Watch Later' : '+ Watch Later';

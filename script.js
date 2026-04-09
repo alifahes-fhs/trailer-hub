@@ -1619,8 +1619,8 @@ function updateBadges() {
    /* ================================================================
       INIT
    ================================================================ */
-  //  auth?.enforceAccess?.();
-  //  auth?.renderNavAuth?.();
+   auth?.enforceAccess?.();
+   auth?.renderNavAuth?.();
    updateBadges();
    renderRecentlyViewed();
    loadTrending();

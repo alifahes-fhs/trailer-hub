@@ -819,7 +819,7 @@
          const prev = Number(prevRanks[item.id] || 0);
          const move = prev ? prev - rank : 0;
          const moveText = !prev ? 'NEW' : move > 0 ? `↑ ${move}` : move < 0 ? `↓ ${Math.abs(move)}` : '→';
-         const moveClass = !prev ? 'new' : move > 0 ? 'up' : move < 0 ? 'down' : 'flat';
+         const moveClass = !prev || move > 0 ? 'up' : move < 0 ? 'down' : 'flat';
          const title = item.title || item.name || 'Unknown';
          const hype = Math.min(100, Math.max(8, Math.round((Number(item.popularity || 0) / 400) * 100)));
          const type = item.media_type === 'tv' ? 'tv' : 'movie';
@@ -933,6 +933,7 @@ function updateBadges() {
      try {
        const res = await fetch(`${BASE_URL}/trending/all/day?api_key=${API_KEY}&language=en-US`);
        const data = await res.json();
+       renderTrending(data.results);
        const items = data.results || [];
        row.innerHTML = '';
    
@@ -1197,6 +1198,18 @@ function updateBadges() {
      // Use the container function
      await _plainPlayTrailer(item, type, trailerContainer, actualCard);
    }
+
+   function renderTrending(movies) {
+    const container = $('trending-row');
+    container.innerHTML = movies.map(m => `
+        <div class="trending-card" onclick="location.href='movie.html?id=${m.id}&type=${m.media_type || 'movie'}'">
+            <img src="${IMG_500}${m.backdrop_path}" alt="${m.title || m.name}">
+            <div class="trending-info">
+                <div class="trending-title">${m.title || m.name}</div>
+            </div>
+        </div>
+    `).join('');
+}
    
    async function openTrailerModal(item, type, anchorEl) {
      let trailerContainer = null;
@@ -1330,18 +1343,34 @@ function updateBadges() {
      const type = params.get('type') || 'movie';
      if (!id) { window.location.href = 'index.html'; return; }
    
-     try {
-       const [detailRes, creditsRes] = await Promise.all([
+    try {
+       // Added videoRes to the fetch list
+       const [detailRes, creditsRes, videoRes] = await Promise.all([
          fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&language=en-US`),
-         fetch(`${BASE_URL}/${type}/${id}/credits?api_key=${API_KEY}&language=en-US`)
+         fetch(`${BASE_URL}/${type}/${id}/credits?api_key=${API_KEY}&language=en-US`),
+         fetch(`${BASE_URL}/${type}/${id}/videos?api_key=${API_KEY}&language=en-US`)
        ]);
+
        const detail = await detailRes.json();
        const credits = await creditsRes.json();
+       const videoData = await videoRes.json(); // Get the video data
+
        document.title = `${detail.title || detail.name} — Trailer Hub`;
-       renderDetail(detail, credits, type);
+
+       // Find the YouTube Trailer
+       const trailer = videoData.results.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
+       const videoId = trailer ? trailer.key : null;
+
+       // Pass the videoId into renderDetail
+       renderDetail(detail, credits, type, videoId);
        loadSimilar(id, type);
-     } catch {
-       $('movie-detail').innerHTML = `<div style="text-align:center;padding:120px 20px;color:var(--faint)"><div style="font-size:48px;margin-bottom:16px">⚡</div><p>Could not load movie details.</p><a href="index.html" class="btn-pill" style="margin-top:20px;display:inline-block">← Back</a></div>`;
+       
+       // Update badges for Watch Later
+       updateBadges();
+
+     } catch (err) {
+       console.error("Error loading details:", err);
+       $('movie-detail').innerHTML = `...error message...`;
      }
    }
    
@@ -1355,7 +1384,8 @@ function updateBadges() {
      const director = (credits.crew || []).find(c => c.job === 'Director');
      const cast = (credits.cast || []).slice(0, 12);
      const inWL = storage.has('watchlist', d.id);
-  
+  const isInWatchlist = isMovieInList(detail.id, 'watchlist');
+const isInWatchLater = isMovieInList(detail.id, 'watchlater');
      const budget = d.budget ? `$${(d.budget / 1e6).toFixed(0)}M` : '—';
      const revenue = d.revenue ? `$${(d.revenue / 1e6).toFixed(0)}M` : '—';
      const status = d.status || '—';

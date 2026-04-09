@@ -391,7 +391,7 @@
      const score = item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : '';
      const overview = item.overview || 'No description available.';
      const inWL = storage.has('watchlist', item.id);
-    
+    const inWLat = storage.has('watchlater', item.id)
      const userRating = getUserRating(item.id);
    
      const card = document.createElement('div');

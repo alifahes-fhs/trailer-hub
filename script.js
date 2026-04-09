@@ -1617,37 +1617,46 @@ function updateBadges() {
    }
    
    /* ================================================================
-      INIT
-   ================================================================ */
-   auth?.enforceAccess?.();
-   auth?.renderNavAuth?.();
-   updateBadges();
-   renderRecentlyViewed();
-   loadTrending();
-   loadTonightPicks();
-   loadHypeTimeline();
-   readURLState();
-   loadMovieDetail();
-   initMoodChips();
-   initFilterDropdowns();
-   
-   // Add shake animation style
-   const shakeStyle = document.createElement('style');
-   shakeStyle.textContent = `@keyframes shakeField{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}@keyframes spin{to{transform:rotate(360deg)}}`;
-   document.head.appendChild(shakeStyle);
-   
-   // Genre dropdown toggle
-   const toggle = document.getElementById("genre-toggle");
-   const dropdown = document.getElementById("genre-dropdown");
-   
-   if (toggle && dropdown) {
-     toggle.addEventListener("click", () => {
-       dropdown.classList.toggle("show");
-     });
-   
-     document.addEventListener("click", (e) => {
-       if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
-         dropdown.classList.remove("show");
-       }
-     });
-   }
+   INIT — WRAPPED FOR SAFETY
+================================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM Ready - Initializing Hub...");
+
+    // 1. Run Auth checks safely
+    if (typeof auth !== 'undefined') {
+        auth?.enforceAccess?.();
+        auth?.renderNavAuth?.();
+    }
+
+    // 2. Load the movie data
+    updateBadges();
+    renderRecentlyViewed();
+    loadTrending();
+    loadTonightPicks();
+    loadHypeTimeline();
+    readURLState();
+    loadMovieDetail();
+    initMoodChips();
+    initFilterDropdowns();
+
+    // 3. Add shake animation style
+    const shakeStyle = document.createElement('style');
+    shakeStyle.textContent = `@keyframes shakeField{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}@keyframes spin{to{transform:rotate(360deg)}}`;
+    document.head.appendChild(shakeStyle);
+
+    // 4. Genre dropdown toggle logic
+    const toggle = document.getElementById("genre-toggle");
+    const dropdown = document.getElementById("genre-dropdown");
+
+    if (toggle && dropdown) {
+        toggle.addEventListener("click", () => {
+            dropdown.classList.toggle("show");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove("show");
+            }
+        });
+    }
+});

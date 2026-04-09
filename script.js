@@ -3,11 +3,11 @@
    ============================================================ */
 
    const API_KEY  = 'afecc8075597c531e9aae083331172c6';
-  //  'afecc8075597c531e9aae083331172c6'
    const BASE_URL = 'https://api.themoviedb.org/3';
    const IMG_500  = 'https://image.tmdb.org/t/p/w500';
    const IMG_300  = 'https://image.tmdb.org/t/p/w300';
    const IMG_ORI  = 'https://image.tmdb.org/t/p/original';
+
    
    /* ── State ── */
    let activeGenre  = '';
@@ -1619,8 +1619,8 @@ function updateBadges() {
    /* ================================================================
       INIT
    ================================================================ */
-   auth?.enforceAccess?.();
-   auth?.renderNavAuth?.();
+  //  auth?.enforceAccess?.();
+  //  auth?.renderNavAuth?.();
    updateBadges();
    renderRecentlyViewed();
    loadTrending();

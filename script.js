@@ -2,7 +2,7 @@
    TRAILER HUB — script.js (FULL FIXED VERSION)
    ============================================================ */
 
-   const API_KEY  = '9a32d813a1fe401688bcfa15ce43c963';
+   const API_KEY  = 'afecc8075597c531e9aae083331172c6';
   //  'afecc8075597c531e9aae083331172c6'
    const BASE_URL = 'https://api.themoviedb.org/3';
    const IMG_500  = 'https://image.tmdb.org/t/p/w500';

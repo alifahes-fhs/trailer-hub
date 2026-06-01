@@ -1,5 +1,98 @@
 /* Responsive fixes and scroll behavior for Trailer Hub */
 
+/* ================================================================
+   FILTER DROPDOWN — smooth slide-down, scrollable list
+   Using !important to override any display:none in styles.css
+================================================================ */
+
+/* Hidden state — use visibility+opacity+max-height, NOT display:none */
+.filter-dd .filter-menu {
+  display: block !important;        /* override any display:none from styles.css */
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  left: 0 !important;
+  z-index: 600 !important;
+  min-width: 180px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  background: var(--bg2, #1a1a2e) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,.6) !important;
+
+  /* Hidden but animatable */
+  max-height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  transform: translateY(-8px) !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+
+  /* Smooth animation */
+  transition:
+    max-height .3s cubic-bezier(.4,0,.2,1),
+    opacity    .25s ease,
+    transform  .25s ease,
+    visibility 0s linear .3s !important;
+}
+
+/* Open state — override everything */
+.filter-dd.open .filter-menu {
+  max-height: 320px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  transition:
+    max-height .3s cubic-bezier(.4,0,.2,1),
+    opacity    .25s ease,
+    transform  .25s ease,
+    visibility 0s linear 0s !important;
+
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent, #6C63FF) transparent;
+}
+.filter-dd.open .filter-menu::-webkit-scrollbar       { width: 4px; }
+.filter-dd.open .filter-menu::-webkit-scrollbar-track { background: transparent; }
+.filter-dd.open .filter-menu::-webkit-scrollbar-thumb { background: var(--accent, #6C63FF); border-radius: 4px; }
+
+/* Items */
+.filter-menu .filter-item {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 10px 16px !important;
+  background: none !important;
+  border: none !important;
+  color: var(--text, #fff) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: background .15s, color .15s !important;
+  white-space: nowrap !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+}
+.filter-menu .filter-item:hover  { background: rgba(108,99,255,.18) !important; color: var(--accent, #6C63FF) !important; }
+.filter-menu .filter-item.active { background: rgba(108,99,255,.22) !important; color: var(--accent, #6C63FF) !important; font-weight: 600 !important; }
+
+/* Caret rotation */
+.filter-dd .filter-btn .caret {
+  display: inline-block;
+  transition: transform .25s ease;
+}
+.filter-dd.open .filter-btn .caret {
+  transform: rotate(180deg);
+}
+
+/* Wrapper must be relative */
+.filter-dd { position: relative; }
+
+/* ================================================================
+   SCROLL / OVERFLOW FIXES
+================================================================ */
 html, body {
   overflow-x: hidden;
 }

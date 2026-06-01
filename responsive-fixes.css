@@ -1,5 +1,86 @@
 /* Responsive fixes and scroll behavior for Trailer Hub */
 
+/* ================================================================
+   FILTER DROPDOWN — smooth slide-down, scrollable list
+================================================================ */
+
+/* The dropdown panel starts hidden via height:0 + overflow:hidden */
+.filter-dd .filter-menu {
+  /* Positioning & shape */
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 600;
+  min-width: 180px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: var(--bg2, #1a1a2e);
+  box-shadow: 0 12px 40px rgba(0,0,0,.6);
+
+  /* Scrollable when many items */
+  max-height: 0;
+  overflow: hidden;
+
+  /* Smooth slide animation */
+  transition: max-height .28s cubic-bezier(.4,0,.2,1),
+              opacity     .22s ease,
+              transform   .22s ease;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+/* Open state */
+.filter-dd.open .filter-menu {
+  max-height: 320px;   /* shows ~7 items; scrolls beyond */
+  overflow-y: auto;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent, #6C63FF) transparent;
+}
+.filter-dd.open .filter-menu::-webkit-scrollbar       { width: 4px; }
+.filter-dd.open .filter-menu::-webkit-scrollbar-track { background: transparent; }
+.filter-dd.open .filter-menu::-webkit-scrollbar-thumb { background: var(--accent, #6C63FF); border-radius: 4px; }
+
+/* Each item inside the dropdown */
+.filter-menu .filter-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--text, #fff);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+  gap: 8px;
+}
+.filter-menu .filter-item:first-child { border-radius: 12px 12px 0 0; }
+.filter-menu .filter-item:last-child  { border-radius: 0 0 12px 12px; }
+.filter-menu .filter-item:hover       { background: rgba(108,99,255,.18); color: var(--accent, #6C63FF); }
+.filter-menu .filter-item.active      { background: rgba(108,99,255,.22); color: var(--accent, #6C63FF); font-weight: 600; }
+
+/* Caret rotates when open */
+.filter-dd .filter-btn .caret {
+  display: inline-block;
+  transition: transform .22s ease;
+}
+.filter-dd.open .filter-btn .caret {
+  transform: rotate(180deg);
+}
+
+/* ── make sure the filter-dd wrapper is relative so the absolute
+   menu positions correctly ── */
+.filter-dd {
+  position: relative;
+}
+
 html, body {
   overflow-x: hidden;
 }

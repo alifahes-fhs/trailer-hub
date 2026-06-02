@@ -64,20 +64,20 @@ window.addEventListener("load", () => {
       return cred.user;
     },
 
-    async logout() {
-      try {
-        await auth.signOut();
-      } catch (e) {
-        console.warn("Firebase logout failed, clearing local session anyway:", e);
-      }
+  async logout() {
+  sessionStorage.setItem('th_logging_out', '1');
 
-      localStorage.removeItem("th_user");
-      localStorage.removeItem("th_guest");
-      localStorage.removeItem("watchlist");
-      localStorage.removeItem("watchlater");
+  try {
+    await auth.signOut();
+  } catch (e) {
+    console.warn('Firebase logout failed:', e);
+  }
 
-      window.location.replace("login.html");
-    },
+  localStorage.removeItem('th_user');
+  localStorage.removeItem('th_guest');
+
+  window.location.replace('login.html?logout=1');
+},
 
     getCurrentUser() {
       return auth.currentUser;

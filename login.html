@@ -138,12 +138,22 @@
     });
 
     /* ── Redirect if already logged in ── */
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        TrailerAuth.setUser(user.email, user.providerData?.[0]?.providerId || 'email');
-        location.href = 'index.html';
-      }
-    });
+  firebase.auth().onAuthStateChanged(user => {
+  const params = new URLSearchParams(window.location.search);
+  const isLogout = params.get('logout') === '1' || sessionStorage.getItem('th_logging_out') === '1';
+
+  if (isLogout) {
+    sessionStorage.removeItem('th_logging_out');
+    localStorage.removeItem('th_user');
+    localStorage.removeItem('th_guest');
+    return;
+  }
+
+  if (user) {
+    TrailerAuth.setUser(user.email, user.providerData?.[0]?.providerId || 'email');
+    location.href = 'index.html';
+  }
+});
   </script>
 </body>
 </html>

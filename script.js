@@ -414,7 +414,7 @@
          ${score ? `<div class="card-rating">${score}</div>` : ''}
          <div class="card-overlay">
            <p class="card-overview">${overview.substring(0, 100)}...</p>
-           <button class="watch-trailer-btn">▶ WATCH TRAILER</button>
+          
          </div>
        </div>
        <div class="card-info">
@@ -1661,6 +1661,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMovieDetail();
     initMoodChips();
     initFilterDropdowns();
+
+    document.getElementById('nav-logout-btn')?.addEventListener('click', () => {
+  if (window.FirebaseAuth) {
+    window.FirebaseAuth.logout();
+  } else {
+    localStorage.removeItem('th_user');
+    localStorage.removeItem('th_guest');
+    window.location.href = 'login.html';
+  }
+});
 
     // 3. Add shake animation style
     const shakeStyle = document.createElement('style');

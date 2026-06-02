@@ -1,0 +1,3 @@
+body.has-watch-party {
+  padding-bottom: 90px; /* match bar height */
+}

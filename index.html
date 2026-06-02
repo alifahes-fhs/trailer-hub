@@ -255,22 +255,37 @@
       border: none; border-radius: 16px;
     }
     /* Slide-down animation for filter menus */
+/* Slide-down animation for all filter menus */
 .filter-menu {
+  display: block;
   transform-origin: top center;
   transform: scaleY(0) translateY(-8px);
   opacity: 0;
-  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.18s ease;
+  max-height: 0;
+  overflow: hidden;
+
+  transition:
+    transform 0.22s cubic-bezier(0.4,0,0.2,1),
+    opacity 0.18s ease,
+    max-height 0.22s ease;
+
   pointer-events: none;
 }
+
 .filter-dd.open .filter-menu {
   transform: scaleY(1) translateY(0);
   opacity: 1;
+  max-height: 320px;
+  overflow-y: auto;
   pointer-events: auto;
 }
 
     
-  </style>  <script src="auth.js"></script>
+  </style>  
+  <script src="firebase-auth.js"></script>
+  
+  <script src="auth.js"></script>
+
   <!-- Socket.io client — CDN fallback for reliable mobile support -->
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" onerror="console.warn('Socket.io client failed to load')"></script>
   <script src="script.js"></script>

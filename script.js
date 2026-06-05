@@ -441,11 +441,13 @@
      const storeItem = { id: item.id, title, year, poster_path: item.poster_path || '', _type: type, score: item.vote_average || 0 };
    
      const trailerBtn = card.querySelector('.watch-trailer-btn');
-     trailerBtn.addEventListener('click', e => {
-       e.stopPropagation();
-       e.preventDefault();
-       playTrailerInsideCard(item, type, card);
-     });
+     if (trailerBtn) {
+       trailerBtn.addEventListener('click', e => {
+         e.stopPropagation();
+         e.preventDefault();
+         playTrailerInsideCard(item, type, card);
+       });
+     }
    
      card.querySelector('.wl-btn').addEventListener('click', e => {
        e.stopPropagation();
@@ -771,6 +773,18 @@
      return entries[0][0];
    }
    
+   // Re-run tonight picks once Firebase auth resolves (handles async login state)
+   window.addEventListener('load', () => {
+     const tryAfterAuth = setInterval(() => {
+       if (auth?.isLoggedIn?.()) {
+         clearInterval(tryAfterAuth);
+         loadTonightPicks();
+       }
+     }, 600);
+     // Stop checking after 6 seconds regardless
+     setTimeout(() => clearInterval(tryAfterAuth), 6000);
+   });
+
    async function loadTonightPicks() {
      const row = $('tonight-row');
      if (!row) return;

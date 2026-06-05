@@ -74,7 +74,6 @@
                   <div class="provider">Provider: ${u.provider}</div>
                 </div>
               </div>
-              <button class="logout-btn" id="logout-btn">Logout</button>
             </div>
           </div>
         </div>
@@ -94,9 +93,6 @@
           menu.classList.remove('open');
         }
       });
-  
-      // logout
-      host.querySelector('#logout-btn')?.addEventListener('click', logout);
   
       return;
     }
@@ -125,4 +121,3 @@
     requirePersonalFeature
   };
 })();
-
